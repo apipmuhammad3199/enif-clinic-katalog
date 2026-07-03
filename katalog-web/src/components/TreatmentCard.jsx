@@ -8,7 +8,7 @@ const getDiscountBadge = (discount) => {
 };
 
 const TreatmentCard = ({ treatment }) => {
-  const pdfUrl = `/assets/treatments/${treatment.filename}`;
+  const pdfUrl = `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}`;
 
   return (
     <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="treatment-card" data-aos="fade-up" data-aos-anchor-placement="top-bottom">

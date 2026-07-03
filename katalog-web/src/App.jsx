@@ -30,7 +30,7 @@ function App() {
       {/* Header */}
       <header className="header">
         <div className="logo-container">
-          <img src="/assets/logo.jpg" alt="Enif Clinic Logo" className="logo" />
+          <img src={`${import.meta.env.BASE_URL}assets/logo.jpg`} alt="Enif Clinic Logo" className="logo" />
           <div className="clinic-name">Enif Clinic</div>
         </div>
         <div className="social-links">

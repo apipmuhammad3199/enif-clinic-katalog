@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const slides = [
-  '/assets/Slide1.jpg',
-  '/assets/Slide2.jpg',
-  '/assets/Slide3.jpg'
+  `${import.meta.env.BASE_URL}assets/Slide1.jpg`,
+  `${import.meta.env.BASE_URL}assets/Slide2.jpg`,
+  `${import.meta.env.BASE_URL}assets/Slide3.jpg`
 ];
 
 const PromoSlider = () => {
