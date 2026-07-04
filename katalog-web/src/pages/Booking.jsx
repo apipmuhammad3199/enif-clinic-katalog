@@ -43,15 +43,15 @@ Kami informasikan, slot booking dibuka mulai jam 11.00 - 17.00
 Booking maksimal H-1 sebelum kedatangan
 
 *Proses verifikasi data*
-a. Nama sesuai kartu identitas : ${formData.name}
-b. Alamat sesuai kartu identitas : ${formData.address}
-c. Pasien Lama atau Baru : ${formData.status}
-d. Nomor Whatsapp : ${formData.whatsapp}
+Nama sesuai kartu identitas : ${formData.name}
+Alamat sesuai kartu identitas : ${formData.address}
+Pasien Lama atau Baru : ${formData.status}
+Nomor Whatsapp : ${formData.whatsapp}
 
 *Reservasi treatment*
-a. Hari dan tanggal : ${formData.date}
-b. Jam : ${formData.time}
-c. Treatment : ${formData.treatment}
+Hari dan tanggal : ${formData.date}
+Jam : ${formData.time}
+Treatment : ${formData.treatment}
 
 Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
 
@@ -84,17 +84,17 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
             <h3>Proses Verifikasi Data</h3>
             
             <div className="form-group">
-              <label>a. Nama sesuai kartu identitas :</label>
+              <label>Nama sesuai kartu identitas :</label>
               <input type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="Contoh: Budi Santoso" />
             </div>
 
             <div className="form-group">
-              <label>b. Alamat sesuai kartu identitas :</label>
+              <label>Alamat sesuai kartu identitas :</label>
               <textarea name="address" required value={formData.address} onChange={handleChange} placeholder="Contoh: Jl. Melati No. 10..." rows="2"></textarea>
             </div>
 
             <div className="form-group">
-              <label>c. Pasien Lama atau Baru :</label>
+              <label>Pasien Lama atau Baru :</label>
               <select name="status" value={formData.status} onChange={handleChange}>
                 <option value="Baru">Baru (Belum pernah terdaftar)</option>
                 <option value="Lama">Lama (Sudah pernah terdaftar)</option>
@@ -102,7 +102,7 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
             </div>
 
             <div className="form-group">
-              <label>d. Nomor WhatsApp :</label>
+              <label>Nomor WhatsApp :</label>
               <input type="tel" name="whatsapp" required value={formData.whatsapp} onChange={handleChange} placeholder="Contoh: 08123456789" />
             </div>
           </div>
@@ -111,12 +111,12 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
             <h3>Reservasi Treatment</h3>
             
             <div className="form-group">
-              <label>a. Hari dan tanggal :</label>
+              <label>Hari dan tanggal :</label>
               <input type="date" name="date" required value={formData.date} onChange={handleChange} />
             </div>
 
             <div className="form-group">
-              <label>b. Jam :</label>
+              <label>Jam :</label>
               <div className="time-slots-grid">
                 {timeSlots.map(t => (
                   <button 
@@ -133,7 +133,7 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
             </div>
 
             <div className="form-group">
-              <label>c. Treatment :</label>
+              <label>Treatment :</label>
               <input type="text" name="treatment" required value={formData.treatment} onChange={handleChange} placeholder="Contoh: Facial Acne" />
             </div>
           </div>
