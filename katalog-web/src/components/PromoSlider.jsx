@@ -26,7 +26,7 @@ const PromoSlider = () => {
       >
         {slides.map((slide, index) => (
           <div className="slide" key={index}>
-            <img src={slide} alt={`Enef Clinic Promo ${index + 1}`} />
+            <img src={slide.url || slide} alt={`Enef Clinic Promo ${index + 1}`} />
           </div>
         ))}
       </div>

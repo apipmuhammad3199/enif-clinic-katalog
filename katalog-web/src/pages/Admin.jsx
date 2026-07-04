@@ -102,36 +102,36 @@ function Admin() {
     showNotification('Video berhasil ditambahkan!');
   };
 
-  const handleRemovePromo = (idx) => {
+  const handleRemovePromo = (id) => {
     setConfirmDialog({
       isOpen: true,
       message: 'Apakah Anda yakin ingin menghapus promo slider ini?',
       onConfirm: () => {
-        removePromo(idx);
+        removePromo(id);
         showNotification('Promo slider berhasil dihapus!');
         setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
       }
     });
   };
 
-  const handleRemoveTreatment = (idx) => {
+  const handleRemoveTreatment = (id) => {
     setConfirmDialog({
       isOpen: true,
       message: 'Apakah Anda yakin ingin menghapus treatment ini?',
       onConfirm: () => {
-        removeTreatment(idx);
+        removeTreatment(id);
         showNotification('Treatment berhasil dihapus!');
         setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
       }
     });
   };
 
-  const handleRemoveVideo = (idx) => {
+  const handleRemoveVideo = (id) => {
     setConfirmDialog({
       isOpen: true,
       message: 'Apakah Anda yakin ingin menghapus video ini?',
       onConfirm: () => {
-        removeVideo(idx);
+        removeVideo(id);
         showNotification('Video berhasil dihapus!');
         setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
       }
@@ -194,9 +194,9 @@ function Admin() {
             <h3 style={{ marginTop: '3rem' }}>Daftar Promo Saat Ini</h3>
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
               {promos.map((promo, idx) => (
-                <div key={idx} style={{ position: 'relative', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden' }}>
-                  <img src={promo} alt="promo" style={{ width: '200px', height: '120px', objectFit: 'cover', display: 'block' }} />
-                  <button onClick={() => handleRemovePromo(idx)} className="admin-btn admin-btn-danger" style={{ position: 'absolute', top: '5px', right: '5px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
+                <div key={promo.id || idx} style={{ position: 'relative', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden' }}>
+                  <img src={promo.url || promo} alt="promo" style={{ width: '200px', height: '120px', objectFit: 'cover', display: 'block' }} />
+                  <button onClick={() => handleRemovePromo(promo.id)} className="admin-btn admin-btn-danger" style={{ position: 'absolute', top: '5px', right: '5px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
                 </div>
               ))}
             </div>
@@ -258,7 +258,7 @@ function Admin() {
               <h3>Daftar Treatment</h3>
               <div>
                 {treatments.map((t, idx) => (
-                  <div key={idx} className="admin-list-item">
+                  <div key={t.id || idx} className="admin-list-item">
                     <div>
                       <div style={{ fontWeight: '600', color: '#222' }}>{t.name}</div>
                       <div style={{ fontSize: '0.9rem', color: '#666' }}>{t.price} {t.discount > 0 && <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>({t.discount}%)</span>}</div>
@@ -268,7 +268,7 @@ function Admin() {
                         </div>
                       )}
                     </div>
-                    <button onClick={() => handleRemoveTreatment(idx)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    <button onClick={() => handleRemoveTreatment(t.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
                   </div>
                 ))}
               </div>
@@ -297,12 +297,12 @@ function Admin() {
               <h3>Daftar Video</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {videos.map((v, idx) => (
-                  <div key={idx} className="admin-list-item" style={{ alignItems: 'flex-start' }}>
+                  <div key={v.id || idx} className="admin-list-item" style={{ alignItems: 'flex-start' }}>
                     <video src={v.src} style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px', background: '#000' }}></video>
                     <div style={{ flex: 1, marginLeft: '1rem' }}>
                       <div style={{ fontWeight: '600' }}>{v.title}</div>
                     </div>
-                    <button onClick={() => handleRemoveVideo(idx)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    <button onClick={() => handleRemoveVideo(v.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
                   </div>
                 ))}
               </div>
