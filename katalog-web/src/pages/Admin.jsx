@@ -5,7 +5,7 @@ import { CMSContext } from '../context/CMSContext';
 function Admin() {
   const navigate = useNavigate();
   const { 
-    treatments, addTreatment, removeTreatment,
+    treatments, addTreatment, updateTreatment, removeTreatment,
     promos, addPromo, removePromo,
     videos, addVideo, removeVideo,
     promoSettings, updatePromoSettings
@@ -58,6 +58,30 @@ function Admin() {
   const [treatmentPdf, setTreatmentPdf] = useState('');
   const [treatmentStartDate, setTreatmentStartDate] = useState('');
   const [treatmentEndDate, setTreatmentEndDate] = useState('');
+  const [editingId, setEditingId] = useState(null);
+
+  const handleEditTreatment = (t) => {
+    setEditingId(t.id);
+    setTreatmentName(t.name || '');
+    setTreatmentDesc(t.description || '');
+    setTreatmentPrice(t.price || '');
+    setTreatmentDiscount(t.discount ? t.discount.toString() : '0');
+    setTreatmentStartDate(t.startDate || '');
+    setTreatmentEndDate(t.endDate || '');
+    setTreatmentPdf(t.pdfLink === "#" ? '' : (t.pdfLink || ''));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTreatmentName('');
+    setTreatmentDesc('');
+    setTreatmentPrice('');
+    setTreatmentDiscount('0');
+    setTreatmentStartDate('');
+    setTreatmentEndDate('');
+    setTreatmentPdf('');
+  };
 
   const handlePriceChange = (e) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, '');
@@ -71,7 +95,7 @@ function Admin() {
 
   const handleAddTreatment = (e) => {
     e.preventDefault();
-    addTreatment({
+    const data = {
       name: treatmentName,
       description: treatmentDesc,
       price: treatmentPrice,
@@ -79,7 +103,17 @@ function Admin() {
       startDate: treatmentStartDate,
       endDate: treatmentEndDate,
       pdfLink: treatmentPdf || "#"
-    });
+    };
+
+    if (editingId) {
+      updateTreatment(editingId, data);
+      showNotification('Treatment berhasil diperbarui!');
+      setEditingId(null);
+    } else {
+      addTreatment(data);
+      showNotification('Treatment berhasil ditambahkan!');
+    }
+
     setTreatmentName('');
     setTreatmentDesc('');
     setTreatmentPrice('');
@@ -87,7 +121,6 @@ function Admin() {
     setTreatmentStartDate('');
     setTreatmentEndDate('');
     setTreatmentPdf('');
-    showNotification('Treatment berhasil ditambahkan!');
   };
 
   // Video State
@@ -206,7 +239,7 @@ function Admin() {
         {activeTab === 'treatment' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Treatment Baru</h3>
+              <h3>{editingId ? 'Edit Treatment' : 'Tambah Treatment Baru'}</h3>
               <form onSubmit={handleAddTreatment}>
                 <div className="admin-form-group">
                   <label>Nama Treatment</label>
@@ -250,7 +283,12 @@ function Admin() {
                   <label>Upload PDF Brosur (Opsional - Demo Lokal)</label>
                   <input type="file" accept=".pdf" className="admin-input" onChange={(e) => handleFileChange(e, setTreatmentPdf)} />
                 </div>
-                <button type="submit" className="admin-btn" style={{ width: '100%' }}>Simpan Treatment</button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }}>{editingId ? 'Simpan Perubahan' : 'Simpan Treatment'}</button>
+                  {editingId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={handleCancelEdit}>Batal Edit</button>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -268,7 +306,10 @@ function Admin() {
                         </div>
                       )}
                     </div>
-                    <button onClick={() => handleRemoveTreatment(t.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditTreatment(t)} className="admin-btn" style={{ padding: '0.5rem 1rem', background: '#e0e0e0', color: '#333' }}>Edit</button>
+                      <button onClick={() => handleRemoveTreatment(t.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    </div>
                   </div>
                 ))}
               </div>

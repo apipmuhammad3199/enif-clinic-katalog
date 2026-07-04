@@ -80,6 +80,14 @@ export const CMSProvider = ({ children }) => {
     }
   };
 
+  const updateTreatment = async (id, updatedData) => {
+    try {
+      await setDoc(doc(db, 'treatments', id), updatedData, { merge: true });
+    } catch (e) {
+      console.error("Error updating document: ", e);
+    }
+  };
+
   const removeTreatment = async (id) => {
     try {
       await deleteDoc(doc(db, 'treatments', id));
@@ -130,7 +138,7 @@ export const CMSProvider = ({ children }) => {
 
   return (
     <CMSContext.Provider value={{
-      treatments, addTreatment, removeTreatment,
+      treatments, addTreatment, updateTreatment, removeTreatment,
       promos, addPromo, removePromo,
       videos, addVideo, removeVideo,
       promoSettings, updatePromoSettings,
