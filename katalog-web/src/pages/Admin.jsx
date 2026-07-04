@@ -217,14 +217,13 @@ function Admin() {
                   <textarea className="admin-input" placeholder="Tuliskan deskripsi singkat" value={treatmentDesc} onChange={e => setTreatmentDesc(e.target.value)} rows="3" />
                 </div>
                 <div className="admin-form-group">
-                  <label>Harga Normal</label>
+                  <label>Harga Normal (Opsional)</label>
                   <input 
                     type="text" 
                     className="admin-input" 
-                    placeholder="Contoh: Rp. 500.000" 
+                    placeholder="Kosongkan jika harga sudah ada di PDF" 
                     value={treatmentPrice} 
                     onChange={handlePriceChange} 
-                    required 
                   />
                 </div>
                 <div className="admin-form-group">
