@@ -134,28 +134,6 @@ function Home() {
         )}
       </section>
 
-      {/* Video Section */}
-      <section className="video-section" data-aos="fade-up">
-        <h2>Video Gallery</h2>
-        <div className="video-grid">
-          {videos.slice(0, 4).map((vid, idx) => (
-            <div key={idx} className="video-card" data-aos="fade-up" data-aos-delay={100 * (idx + 1)}>
-              <video controls src={vid.src}></video>
-              <div className="video-info">
-                <h3>{vid.title}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-        {videos.length > 4 && (
-          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
-            <Link to="/videos" style={{ display: 'inline-block', padding: '0.8rem 2rem', background: 'var(--primary-color)', color: 'white', textDecoration: 'none', borderRadius: '30px', fontWeight: '500', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(186, 155, 92, 0.3)' }}>
-              Lihat Lebih Banyak Video &rarr;
-            </Link>
-          </div>
-        )}
-      </section>
-
       {/* Location Section */}
       <section className="maps-section" data-aos="fade-up">
         <h2>Enef Clinic Ambara Bawen</h2>
@@ -186,6 +164,30 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* Video Section */}
+      <section className="video-section" data-aos="fade-up">
+        <h2>Video Gallery</h2>
+        <div className="video-grid">
+          {videos.slice(0, 4).map((vid, idx) => (
+            <div key={idx} className="video-card" data-aos="fade-up" data-aos-delay={100 * (idx + 1)}>
+              <video controls src={vid.src}></video>
+              <div className="video-info">
+                <h3>{vid.title}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
+        {videos.length > 4 && (
+          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+            <Link to="/videos" style={{ display: 'inline-block', padding: '0.8rem 2rem', background: 'var(--primary-color)', color: 'white', textDecoration: 'none', borderRadius: '30px', fontWeight: '500', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(186, 155, 92, 0.3)' }}>
+              Lihat Lebih Banyak Video &rarr;
+            </Link>
+          </div>
+        )}
+      </section>
+
+
 
       <FloatingWhatsApp />
 
