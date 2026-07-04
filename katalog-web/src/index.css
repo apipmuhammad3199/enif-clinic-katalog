@@ -378,6 +378,55 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
+button.floating-wa {
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.floating-wa-menu {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+}
+
+.floating-wa-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.wa-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.8rem 1.2rem;
+  color: var(--text-dark);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.wa-menu-item:hover {
+  background-color: #f9f9f9;
+  color: var(--primary-color);
+}
+
 /* Maps Section */
 .maps-section {
   max-width: 1200px;
@@ -446,6 +495,11 @@ h1, h2, h3, h4, h5, h6 {
   .floating-wa svg {
     width: 24px;
     height: 24px;
+  }
+
+  .floating-wa-menu {
+    bottom: 80px;
+    right: 20px;
   }
 }
 
