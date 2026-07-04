@@ -4,6 +4,12 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 function Booking() {
+  const timeSlots = [
+    "11:00", "11:30", "12:00", "12:30", 
+    "13:00", "13:30", "14:00", "14:30", 
+    "15:00", "15:30", "16:00", "16:30", "17:00"
+  ];
+
   const [searchParams] = useSearchParams();
   const initialTreatment = searchParams.get('treatment') || '';
 
@@ -111,7 +117,19 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
 
             <div className="form-group">
               <label>b. Jam :</label>
-              <input type="time" name="time" min="11:00" max="17:00" required value={formData.time} onChange={handleChange} />
+              <div className="time-slots-grid">
+                {timeSlots.map(t => (
+                  <button 
+                    key={t}
+                    type="button" 
+                    className={`time-slot-btn ${formData.time === t ? 'active' : ''}`}
+                    onClick={() => setFormData(prev => ({ ...prev, time: t }))}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <input type="text" name="time" required value={formData.time} style={{opacity: 0, height: 0, position: 'absolute'}} onChange={() => {}} />
             </div>
 
             <div className="form-group">
