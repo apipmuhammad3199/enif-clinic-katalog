@@ -39,7 +39,9 @@ function VideoGallery() {
             <div className="video-grid">
               {videos.slice(0, visibleCount).map((vid, idx) => (
                 <div key={idx} className="video-card">
-                  <iframe src={vid.src} width="100%" height="450" frameBorder="0" scrolling="no" allowtransparency="true" style={{ display: 'block', background: '#f4f4f4' }}></iframe>
+                  <div style={{ width: '100%', height: '340px', overflow: 'hidden', position: 'relative', background: '#000' }}>
+                    <iframe src={vid.src} width="100%" height="460" frameBorder="0" scrolling="no" allowtransparency="true" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" style={{ display: 'block', position: 'absolute', top: '-55px', left: 0, border: 'none', overflow: 'hidden' }}></iframe>
+                  </div>
                   <div className="video-info">
                     <h3>{vid.title}</h3>
                   </div>
