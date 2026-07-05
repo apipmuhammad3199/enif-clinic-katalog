@@ -14,33 +14,13 @@ const PromoSlider = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  const goToSlide = (index) => {
-    setCurrentIndex(index);
-  };
-
   return (
     <div className="promo-slider">
-      <div 
-        className="slider-inner"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-      >
-        {slides.map((slide, index) => (
-          <div className="slide" key={index}>
-            <img src={slide.url || slide} alt={`Enef Clinic Promo ${index + 1}`} />
-          </div>
-        ))}
-      </div>
-      
-      <div className="slider-dots">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            className={`slider-dot ${index === currentIndex ? 'active' : ''}`}
-            onClick={() => goToSlide(index)}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+      {slides.map((slide, index) => (
+        <div className={`slide ${index === currentIndex ? 'active' : ''}`} key={index}>
+          <img src={slide.url || slide} alt={`Enef Clinic Promo ${index + 1}`} />
+        </div>
+      ))}
     </div>
   );
 };

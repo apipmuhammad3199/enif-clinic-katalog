@@ -1,6 +1,8 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
+import { storage } from '../firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 function Admin() {
   const navigate = useNavigate();
@@ -126,22 +128,80 @@ function Admin() {
   // Video State
   const [videoTitle, setVideoTitle] = useState('');
   const [videoSrc, setVideoSrc] = useState('');
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleAddVideo = (e) => {
-    e.preventDefault();
-    let finalSrc = videoSrc.trim();
-    if (finalSrc.includes('instagram.com') && !finalSrc.includes('/embed')) {
-      finalSrc = finalSrc.split('?')[0]; 
-      if (!finalSrc.endsWith('/')) {
-        finalSrc += '/';
+  const handleVideoFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        showNotification('Ukuran video maksimal 10 MB!');
+        setVideoFile(null);
+        e.target.value = null;
+        return;
       }
-      finalSrc += 'embed';
+      setVideoFile(file);
+      setVideoSrc(''); // Clear text input if file selected
+    } else {
+      setVideoFile(null);
     }
-    
-    addVideo({ title: videoTitle, src: finalSrc });
+  };
+
+  const handleAddVideo = async (e) => {
+    e.preventDefault();
+    if (!videoTitle) {
+      showNotification('Judul video wajib diisi!');
+      return;
+    }
+
+    if (videoFile) {
+      setUploadingVideo(true);
+      const storageRef = ref(storage, `videos/${Date.now()}_${videoFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, videoFile);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        }, 
+        (error) => {
+          console.error("Error uploading video: ", error);
+          showNotification('Gagal mengunggah video!');
+          setUploadingVideo(false);
+        }, 
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          addVideo({ title: videoTitle, src: downloadURL });
+          resetVideoForm();
+          showNotification('Video berhasil ditambahkan!');
+        }
+      );
+    } else if (videoSrc) {
+      let finalSrc = videoSrc.trim();
+      if (finalSrc.includes('instagram.com') && !finalSrc.includes('/embed')) {
+        finalSrc = finalSrc.split('?')[0]; 
+        if (!finalSrc.endsWith('/')) {
+          finalSrc += '/';
+        }
+        finalSrc += 'embed';
+      }
+      addVideo({ title: videoTitle, src: finalSrc });
+      resetVideoForm();
+      showNotification('Video link berhasil ditambahkan!');
+    } else {
+      showNotification('Pilih file video atau masukkan link!');
+    }
+  };
+
+  const resetVideoForm = () => {
     setVideoTitle('');
     setVideoSrc('');
-    showNotification('Video berhasil ditambahkan!');
+    setVideoFile(null);
+    setUploadingVideo(false);
+    setUploadProgress(0);
+    const fileInput = document.getElementById('videoFileInput');
+    if (fileInput) fileInput.value = null;
   };
 
   const handleRemovePromo = (id) => {
@@ -335,26 +395,53 @@ function Admin() {
                   <label>Judul Video</label>
                   <input type="text" className="admin-input" placeholder="Masukkan judul video" value={videoTitle} onChange={e => setVideoTitle(e.target.value)} required />
                 </div>
-                <div className="admin-form-group">
-                  <label>Link Instagram (Reels / Post)</label>
-                  <input type="text" className="admin-input" placeholder="Misal: https://www.instagram.com/p/..." value={videoSrc} required onChange={(e) => setVideoSrc(e.target.value)} />
+                
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                  <div className="admin-form-group" style={{ marginBottom: '1rem' }}>
+                    <label>Opsi 1: Unggah Video (.mp4) - <strong>Direkomendasikan (Maks 10MB)</strong></label>
+                    <input id="videoFileInput" type="file" accept="video/mp4,video/x-m4v,video/*" className="admin-input" onChange={handleVideoFileChange} disabled={uploadingVideo} />
+                  </div>
+                  <div style={{ textAlign: 'center', color: '#6c757d', marginBottom: '1rem', fontSize: '0.9rem' }}>- ATAU -</div>
+                  <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                    <label>Opsi 2: Link Instagram (Reels / Post)</label>
+                    <input type="text" className="admin-input" placeholder="Misal: https://www.instagram.com/p/..." value={videoSrc} onChange={(e) => setVideoSrc(e.target.value)} disabled={uploadingVideo || videoFile !== null} />
+                  </div>
                 </div>
-                <button type="submit" className="admin-btn" style={{ width: '100%' }}>Simpan Video</button>
+
+                {uploadingVideo && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Mengunggah Video... {Math.round(uploadProgress)}%</div>
+                    <div style={{ width: '100%', height: '8px', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s' }}></div>
+                    </div>
+                  </div>
+                )}
+                
+                <button type="submit" className="admin-btn" style={{ width: '100%' }} disabled={uploadingVideo}>
+                  {uploadingVideo ? 'Sedang Menyimpan...' : 'Simpan Video'}
+                </button>
               </form>
             </div>
 
             <div className="admin-card" style={{ flex: 1 }}>
               <h3>Daftar Video</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {videos.map((v, idx) => (
+                {videos.map((v, idx) => {
+                  const isMp4 = v.src.includes('firebasestorage') || v.src.endsWith('.mp4');
+                  return (
                   <div key={v.id || idx} className="admin-list-item" style={{ alignItems: 'flex-start' }}>
-                    <iframe src={v.src} style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px', background: '#000', border: 'none', overflow: 'hidden' }} scrolling="no" allowtransparency="true"></iframe>
+                    {isMp4 ? (
+                      <video src={v.src} style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px', background: '#000' }} muted playsInline />
+                    ) : (
+                      <iframe src={v.src} style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px', background: '#000', border: 'none', overflow: 'hidden' }} scrolling="no" allowtransparency="true"></iframe>
+                    )}
                     <div style={{ flex: 1, marginLeft: '1rem' }}>
                       <div style={{ fontWeight: '600' }}>{v.title}</div>
                     </div>
                     <button onClick={() => handleRemoveVideo(v.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

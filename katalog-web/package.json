@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist -t"
+    "deploy": "cd .. && node katalog-web/node_modules/gh-pages/bin/gh-pages.js -d katalog-web/dist -t"
   },
   "dependencies": {
     "aos": "^2.3.4",

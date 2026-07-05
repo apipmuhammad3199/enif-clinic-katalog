@@ -63,13 +63,24 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
   };
 
   return (
-    <div className="booking-page-container">
-      <div className="booking-card" data-aos="fade-up">
-        
-        <Link to="/" className="back-link">
-          &larr; Kembali ke Beranda
-        </Link>
-        
+    <div className="app-container" style={{ minHeight: '100vh', backgroundColor: '#fafafa' }}>
+      {/* Minimal Header */}
+      <header className="header" style={{ backgroundColor: '#fff', borderBottom: '1px solid #eaeaea' }}>
+        <div className="logo-container">
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '10px' }}>
+            <img src={`${import.meta.env.BASE_URL}assets/logo.jpg`} alt="Enef Clinic Logo" className="logo" />
+            <div className="clinic-name">Enef Clinic</div>
+          </Link>
+        </div>
+        <div className="social-links">
+          <Link to="/" className="contact-us-btn">
+            Kembali ke Beranda
+          </Link>
+        </div>
+      </header>
+
+      <div className="booking-page-container" style={{ paddingTop: '2rem', minHeight: 'auto', alignItems: 'flex-start', paddingBottom: '4rem' }}>
+        <div className="booking-card" data-aos="fade-up">
         <div className="booking-header">
           <h2>Booking Online Enef Clinic</h2>
           <p className="booking-rules">
@@ -144,6 +155,7 @@ Mohon sertakan foto KTP jika belum pernah terdaftar di Enef Clinic.`;
           </button>
         </form>
       </div>
+    </div>
     </div>
   );
 }

@@ -30,51 +30,62 @@ const calculateDiscountedPrice = (priceStr, discountPercent) => {
   }).format(discountedPrice);
 };
 
-const TreatmentCard = ({ treatment }) => {
+const TreatmentCard = ({ treatment, isProduct = false }) => {
   const pdfUrl = treatment.pdfLink || `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}`;
-
   const activeDiscount = treatment.effectiveDiscount !== undefined ? treatment.effectiveDiscount : treatment.discount;
 
   return (
-    <div className="treatment-card" data-aos="fade-up" data-aos-anchor-placement="top-bottom">
+    <div className="treatment-card group" data-aos="fade-up" data-aos-anchor-placement="top-bottom">
       {getDiscountBadge(activeDiscount)}
       
-      <div>
+      <div className="card-image-container">
+        {/* Placeholder image that scales slightly on hover for an elegant effect */}
+        <div className="card-image-placeholder">
+          <svg className="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+        <div className="card-overlay"></div>
+      </div>
+
+      <div className="card-content">
         <h3 className="treatment-name">{treatment.name}</h3>
         {treatment.price && (
-          <div style={{ marginTop: '0.5rem', fontSize: '0.95rem', color: 'var(--text-light)', fontWeight: '500' }}>
+          <div className="price-container">
             {activeDiscount > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                <div>
-                  <span style={{ textDecoration: 'line-through', marginRight: '0.5rem', opacity: 0.7 }}>{treatment.price}</span>
-                  <span style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '1.1rem' }}>
-                    {calculateDiscountedPrice(treatment.price, activeDiscount)}
-                  </span>
-                </div>
+              <div className="discount-wrapper">
+                <span className="original-price">{treatment.price}</span>
+                <span className="discounted-price">
+                  {calculateDiscountedPrice(treatment.price, activeDiscount)}
+                </span>
               </div>
             ) : (
-              <span>{treatment.price}</span>
+              <span className="regular-price">{treatment.price}</span>
             )}
           </div>
         )}
         {treatment.endDate && (
-          <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: '600', marginTop: treatment.price ? '0.2rem' : '0.5rem' }}>
+          <div className="promo-date">
             *Promo s/d {formatDate(treatment.endDate)}
           </div>
         )}
       </div>
       
       <div className="treatment-actions-group">
-        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="treatment-action">
-          <span>View Details</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14"></path>
-            <path d="M12 5l7 7-7 7"></path>
-          </svg>
-        </a>
+        {!isProduct && (
+          <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="treatment-action">
+            <span>View Details</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        )}
         
-        <Link to={`/booking?treatment=${encodeURIComponent(treatment.name)}`} className="book-now-btn">
-          Book Now
+        <Link to={`/booking?${isProduct ? 'product' : 'treatment'}=${encodeURIComponent(treatment.name)}`} className="book-now-btn">
+          {isProduct ? 'Beli Sekarang' : 'Book Now'}
         </Link>
       </div>
     </div>

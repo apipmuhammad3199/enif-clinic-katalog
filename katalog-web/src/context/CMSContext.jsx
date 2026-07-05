@@ -49,8 +49,8 @@ export const CMSProvider = ({ children }) => {
       videosData.sort((a, b) => b.createdAt - a.createdAt);
       if (videosData.length === 0) {
         setVideos([
-          { id: 'vdefault1', src: `https://www.instagram.com/p/CoXYZ123/embed`, title: "Contoh Video 1" },
-          { id: 'vdefault2', src: `https://www.instagram.com/p/CoABC456/embed`, title: "Contoh Video 2" }
+          { id: 'vdefault1', src: `${import.meta.env.BASE_URL}assets/videos/enefclinic1.mp4`, title: "Treatment Enef Clinic" },
+          { id: 'vdefault2', src: `${import.meta.env.BASE_URL}assets/videos/enefclinic2.mp4`, title: "Bukti Nyata Pelanggan" }
         ]);
       } else {
         setVideos(videosData);

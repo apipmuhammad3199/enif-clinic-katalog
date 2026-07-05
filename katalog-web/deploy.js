@@ -1,0 +1,1 @@
+import ghpages from 'gh-pages'; ghpages.publish('dist', { repo: 'https://github.com/apipmuhammad3199/enif-clinic-katalog.git', dotfiles: true }, (err) => { if (err) console.error(err); else console.log('Deployed successfully'); });
