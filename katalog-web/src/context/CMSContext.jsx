@@ -7,7 +7,13 @@ export const CMSContext = createContext();
 
 export const CMSProvider = ({ children }) => {
   const [treatments, setTreatments] = useState([]);
-  const [promos, setPromos] = useState([]);
+  const [promos, setPromos] = useState([
+    { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.png` },
+    { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.png` },
+    { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.png` },
+    { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.png` },
+    { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.png` },
+  ]);
   const [videos, setVideos] = useState([]);
   const [promoSettings, setPromoSettings] = useState({ 
     show45: true, show50: true
