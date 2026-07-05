@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "cd .. && node katalog-web/node_modules/gh-pages/bin/gh-pages.js -d katalog-web/dist -t"
+    "deploy": "npx push-dir --dir=dist --branch=gh-pages --cleanup --allow-uncommitted"
   },
   "dependencies": {
     "aos": "^2.3.4",
