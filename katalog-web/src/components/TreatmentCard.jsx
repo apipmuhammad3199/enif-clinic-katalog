@@ -31,7 +31,7 @@ const calculateDiscountedPrice = (priceStr, discountPercent) => {
 };
 
 const TreatmentCard = ({ treatment, isProduct = false }) => {
-  const pdfUrl = treatment.pdfLink || `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}`;
+  const pdfUrl = treatment.pdfLink || (treatment.filename ? `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}` : null);
   const activeDiscount = treatment.effectiveDiscount !== undefined ? treatment.effectiveDiscount : treatment.discount;
 
   console.log(`Rendering TreatmentCard for ${treatment.name}, image value is:`, treatment.image);
@@ -79,7 +79,7 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
       </div>
       
       <div className="treatment-actions-group">
-        {!isProduct && (
+        {!isProduct && pdfUrl && (
           <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="treatment-action">
             <span>View Details</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
