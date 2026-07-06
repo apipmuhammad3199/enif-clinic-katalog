@@ -18,7 +18,7 @@ function PromoTreatment() {
       {/* Minimal Header */}
       <Header />
 
-      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div className="catalog-header" style={{ marginBottom: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2rem', color: 'var(--primary-color)' }}>Pilih Promo Treatment</h2>
           <p style={{ color: 'var(--text-light)' }}>Silakan pilih kategori promo yang ingin Anda lihat.</p>

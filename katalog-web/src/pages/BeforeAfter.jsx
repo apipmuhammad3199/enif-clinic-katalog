@@ -48,7 +48,7 @@ function BeforeAfter() {
     <div className="app-container" style={{ minHeight: '100vh', paddingBottom: '4rem', backgroundColor: '#fafafa' }}>
       <Header />
       
-      <section className="catalog-container" style={{ paddingTop: '10px', marginTop: '90px' }}>
+      <section className="catalog-container" style={{ paddingTop: '10px', marginTop: '20px' }}>
         <div style={{ marginBottom: '2rem', textAlign: 'center' }} data-aos="fade-up">
           <div className="section-subtitle-gold">HASIL NYATA</div>
           <h2 className="section-title-grey" style={{ marginBottom: '1rem' }}>MEREKA TELAH MENCOBA DAN MEMBUKTIKAN HASILNYA</h2>

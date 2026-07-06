@@ -30,7 +30,7 @@ function Promo45() {
       {/* Minimal Header */}
       <Header />
 
-      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '100px' }}>
+      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '20px' }}>
         <div className="catalog-header" style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '2rem', color: 'var(--primary-color)' }}>Promo Spesial 45%</h2>
           <p style={{ color: 'var(--text-light)' }}>Perawatan Premium dengan Harga Terbaik untuk Anda</p>

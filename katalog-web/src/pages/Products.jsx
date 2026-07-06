@@ -24,7 +24,7 @@ const Products = () => {
       {/* Minimal Header */}
       <Header />
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', marginTop: '100px', padding: '0 2rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', marginTop: '20px', padding: '0 2rem' }}>
         <div style={{ marginBottom: '2rem', textAlign: 'center' }} data-aos="fade-down">
           <h2 className="section-title-grey" style={{ marginBottom: '0.5rem' }}>Semua Produk Skincare</h2>
           <p style={{ color: 'var(--text-light)' }}>Temukan rangkaian perawatan kulit eksklusif dari Enef Clinic</p>

@@ -2,17 +2,18 @@ import React, { createContext, useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import defaultTreatments from '../data.json';
+import { articles as defaultArticles } from '../data/articles';
 
 export const CMSContext = createContext();
 
 export const CMSProvider = ({ children }) => {
   const [treatments, setTreatments] = useState([]);
   const [promos, setPromos] = useState([
-    { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.png` },
-    { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.png` },
-    { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.png` },
-    { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.png` },
-    { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.png` },
+    { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.jpg` },
+    { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.jpg` },
+    { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.jpg` },
+    { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.jpeg` },
+    { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.jpeg` },
   ]);
   const [videos, setVideos] = useState([]);
   const [promoSettings, setPromoSettings] = useState({ 
@@ -24,6 +25,7 @@ export const CMSProvider = ({ children }) => {
   const [beforeAfterImages, setBeforeAfterImages] = useState([]);
   const [users, setUsers] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [articles, setArticles] = useState([]);
   
   const [loading, setLoading] = useState(true);
 
@@ -54,11 +56,11 @@ export const CMSProvider = ({ children }) => {
       promosData.sort((a, b) => b.createdAt - a.createdAt);
       if (promosData.length === 0) {
         setPromos([
-          { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.png` },
-          { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.png` },
-          { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.png` },
-          { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.png` },
-          { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.png` },
+          { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.jpg` },
+          { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.jpg` },
+          { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.jpg` },
+          { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.jpeg` },
+          { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.jpeg` },
         ]);
       } else {
         setPromos(promosData);
@@ -153,6 +155,16 @@ export const CMSProvider = ({ children }) => {
         setTestimonials(data);
       }
     });
+
+    const unsubArticles = onSnapshot(collection(db, 'articles'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      data.sort((a, b) => b.createdAt - a.createdAt);
+      if (data.length === 0 && defaultArticles) {
+        setArticles(defaultArticles);
+      } else {
+        setArticles(data);
+      }
+    });
     
     return () => {
       unsubTreatments();
@@ -164,6 +176,7 @@ export const CMSProvider = ({ children }) => {
       unsubBeforeAfter();
       unsubUsers();
       unsubTestimonials();
+      unsubArticles();
     };
   }, []);
 
@@ -172,6 +185,14 @@ export const CMSProvider = ({ children }) => {
       await addDoc(collection(db, 'testimonials'), { ...data, createdAt: Date.now() });
     } catch (error) {
       console.error('Error adding testimonial: ', error);
+    }
+  };
+
+  const updateTestimonial = async (id, updatedData) => {
+    try {
+      await setDoc(doc(db, 'testimonials', id), updatedData, { merge: true });
+    } catch (e) {
+      console.error("Error updating testimonial: ", e);
     }
   };
 
@@ -216,6 +237,14 @@ export const CMSProvider = ({ children }) => {
     }
   };
 
+  const updatePromo = async (id, updatedData) => {
+    try {
+      await setDoc(doc(db, 'promos', id), updatedData, { merge: true });
+    } catch (e) {
+      console.error("Error updating promo: ", e);
+    }
+  };
+
   const removePromo = async (id) => {
     try {
       await deleteDoc(doc(db, 'promos', id));
@@ -229,6 +258,14 @@ export const CMSProvider = ({ children }) => {
       await addDoc(collection(db, 'videos'), { ...videoObj, createdAt: Date.now() });
     } catch (e) {
       console.error("Error adding video: ", e);
+    }
+  };
+
+  const updateVideo = async (id, updatedData) => {
+    try {
+      await setDoc(doc(db, 'videos', id), updatedData, { merge: true });
+    } catch (e) {
+      console.error("Error updating video: ", e);
     }
   };
 
@@ -251,6 +288,9 @@ export const CMSProvider = ({ children }) => {
   const addSkincare = async (product) => {
     try { await addDoc(collection(db, 'skincare_products'), { ...product, createdAt: Date.now() }); } catch (e) { console.error(e); }
   };
+  const updateSkincare = async (id, updatedData) => {
+    try { await setDoc(doc(db, 'skincare_products', id), updatedData, { merge: true }); } catch (e) { console.error(e); }
+  };
   const removeSkincare = async (id) => {
     try { await deleteDoc(doc(db, 'skincare_products', id)); } catch (e) { console.error(e); }
   };
@@ -258,12 +298,18 @@ export const CMSProvider = ({ children }) => {
   const addPerawatanPDF = async (pdf) => {
     try { await addDoc(collection(db, 'perawatan_pdfs'), { ...pdf, createdAt: Date.now() }); } catch (e) { console.error(e); }
   };
+  const updatePerawatanPDF = async (id, updatedData) => {
+    try { await setDoc(doc(db, 'perawatan_pdfs', id), updatedData, { merge: true }); } catch (e) { console.error(e); }
+  };
   const removePerawatanPDF = async (id) => {
     try { await deleteDoc(doc(db, 'perawatan_pdfs', id)); } catch (e) { console.error(e); }
   };
 
   const addBeforeAfter = async (image) => {
     try { await addDoc(collection(db, 'before_after'), { ...image, createdAt: Date.now() }); } catch (e) { console.error(e); }
+  };
+  const updateBeforeAfter = async (id, updatedData) => {
+    try { await setDoc(doc(db, 'before_after', id), updatedData, { merge: true }); } catch (e) { console.error(e); }
   };
   const removeBeforeAfter = async (id) => {
     try { await deleteDoc(doc(db, 'before_after', id)); } catch (e) { console.error(e); }
@@ -276,17 +322,28 @@ export const CMSProvider = ({ children }) => {
     try { await deleteDoc(doc(db, 'users', id)); } catch (e) { console.error(e); }
   };
 
+  const addArticle = async (article) => {
+    try { await addDoc(collection(db, 'articles'), { ...article, createdAt: Date.now() }); } catch (e) { console.error(e); }
+  };
+  const updateArticle = async (id, updatedData) => {
+    try { await setDoc(doc(db, 'articles', id), updatedData, { merge: true }); } catch (e) { console.error(e); }
+  };
+  const removeArticle = async (id) => {
+    try { await deleteDoc(doc(db, 'articles', id)); } catch (e) { console.error(e); }
+  };
+
   return (
     <CMSContext.Provider value={{
       treatments, addTreatment, updateTreatment, removeTreatment,
-      promos, addPromo, removePromo,
-      videos, addVideo, removeVideo,
+      promos, addPromo, updatePromo, removePromo,
+      videos, addVideo, updateVideo, removeVideo,
       promoSettings, updatePromoSettings,
-      skincareProducts, addSkincare, removeSkincare,
-      perawatanPDFs, addPerawatanPDF, removePerawatanPDF,
-      beforeAfterImages, addBeforeAfter, removeBeforeAfter,
+      skincareProducts, addSkincare, updateSkincare, removeSkincare,
+      perawatanPDFs, addPerawatanPDF, updatePerawatanPDF, removePerawatanPDF,
+      beforeAfterImages, addBeforeAfter, updateBeforeAfter, removeBeforeAfter,
       users, addUser, removeUser,
-      testimonials, addTestimonial, removeTestimonial,
+      testimonials, addTestimonial, updateTestimonial, removeTestimonial,
+      articles, addArticle, updateArticle, removeArticle,
       loading
     }}>
       {children}

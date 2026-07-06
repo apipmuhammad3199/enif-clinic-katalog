@@ -22,7 +22,7 @@ function AllTreatment() {
       {/* Minimal Header */}
       <Header />
 
-      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '100px' }}>
+      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '20px' }}>
         <div className="catalog-header" style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '2rem', color: 'var(--primary-color)' }}>Semua Perawatan</h2>
           <p style={{ color: 'var(--text-light)' }}>Jelajahi seluruh rangkaian perawatan estetika terbaik dari Enef Clinic untuk memancarkan kecantikan alami Anda.</p>

@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 import FloatingWhatsApp from '../components/FloatingWhatsApp';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import '../index.css';
-import { articles } from '../data/articles';
+import { CMSContext } from '../context/CMSContext';
 
 function Articles() {
+  const { articles } = useContext(CMSContext);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     AOS.init({ duration: 800, once: true, easing: 'ease-out-cubic' });
@@ -30,7 +32,7 @@ function Articles() {
         </div>
       </header>
 
-      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '100px' }}>
+      <section className="catalog-container" data-aos="fade-up" style={{ marginTop: '20px' }}>
         <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
           <div className="section-subtitle-gold">TIPS DAN INSIGHT</div>
           <h2 className="section-title-grey">SELALU DAPATKAN UPDATE INSIGHT KECANTIKAN</h2>
@@ -48,7 +50,7 @@ function Articles() {
               boxShadow: '0 4px 15px rgba(0,0,0,0.03)'
             }} data-aos="fade-up" data-aos-delay={idx * 50}>
               <div style={{ flex: '1', minWidth: '300px', height: '220px', borderRadius: '8px', overflow: 'hidden' }}>
-                <img src={article.image.startsWith('/') ? `${import.meta.env.BASE_URL}${article.image.substring(1)}` : article.image} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={article.image && article.image.startsWith('/') ? `${import.meta.env.BASE_URL}${article.image.substring(1)}` : article.image} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div style={{ flex: '2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: '500' }}>{article.date}</div>

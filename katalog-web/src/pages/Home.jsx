@@ -8,13 +8,12 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp';
 import AOS from 'aos';
 import { CMSContext } from '../context/CMSContext';
 import '../index.css';
-import { articles } from '../data/articles';
 import Header from '../components/Header';
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const { treatments, promos, videos, promoSettings, skincareProducts, testimonials } = useContext(CMSContext);
+  const { treatments, promos, videos, promoSettings, skincareProducts, testimonials, articles } = useContext(CMSContext);
   const marqueeRef = useRef(null);
   const testiMarqueeRef = useRef(null);
   const contactDropdownRef = useRef(null);
@@ -339,7 +338,7 @@ function Home() {
             {articles.length > 0 && (
               <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '1rem' }} data-aos="fade-right">
                 <div style={{ width: '100%', height: '300px', overflow: 'hidden', borderRadius: '8px' }}>
-                  <img src={articles[0].image.startsWith('/') ? `${import.meta.env.BASE_URL}${articles[0].image.substring(1)}` : articles[0].image} alt={articles[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={articles[0].image && articles[0].image.startsWith('/') ? `${import.meta.env.BASE_URL}${articles[0].image.substring(1)}` : articles[0].image} alt={articles[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--text-dark)', marginTop: '0.5rem', lineHeight: '1.4' }}>{articles[0].title}</h3>
                 <Link to="/articles" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontSize: '0.9rem' }}>Selengkapnya</Link>

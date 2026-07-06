@@ -8,14 +8,15 @@ function Admin() {
   const navigate = useNavigate();
   const { 
     treatments, addTreatment, updateTreatment, removeTreatment,
-    promos, addPromo, removePromo,
-    videos, addVideo, removeVideo,
+    promos, addPromo, updatePromo, removePromo,
+    videos, addVideo, updateVideo, removeVideo,
     promoSettings, updatePromoSettings,
-    skincareProducts, addSkincare, removeSkincare,
-    perawatanPDFs, addPerawatanPDF, removePerawatanPDF,
-    beforeAfterImages, addBeforeAfter, removeBeforeAfter,
+    skincareProducts, addSkincare, updateSkincare, removeSkincare,
+    perawatanPDFs, addPerawatanPDF, updatePerawatanPDF, removePerawatanPDF,
+    beforeAfterImages, addBeforeAfter, updateBeforeAfter, removeBeforeAfter,
     users, addUser, removeUser,
-    testimonials, addTestimonial, removeTestimonial
+    testimonials, addTestimonial, updateTestimonial, removeTestimonial,
+    articles, addArticle, updateArticle, removeArticle
   } = useContext(CMSContext);
 
   const [activeTab, setActiveTab] = useState('promo');
@@ -52,9 +53,50 @@ function Admin() {
     }
   };
 
-  const handleAddPromo = (url) => {
-    addPromo(url);
-    showNotification('Promo Slider berhasil ditambahkan!');
+  const [promoFile, setPromoFile] = useState(null);
+  const [uploadingPromo, setUploadingPromo] = useState(false);
+  const [editingPromoId, setEditingPromoId] = useState(null);
+
+  const handleAddPromo = async (e) => {
+    e.preventDefault();
+    if (!promoFile && !editingPromoId) {
+      showNotification('Pilih gambar promo terlebih dahulu!');
+      return;
+    }
+    
+    if (editingPromoId && !promoFile) {
+      showNotification('Tidak ada perubahan gambar.');
+      setEditingPromoId(null);
+      return;
+    }
+
+    setUploadingPromo(true);
+    const storageRef = ref(storage, `promos/${Date.now()}_${promoFile.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, promoFile);
+    uploadTask.on('state_changed', null, 
+      (err) => { setUploadingPromo(false); showNotification('Gagal upload!'); },
+      async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        if (editingPromoId) {
+          updatePromo(editingPromoId, { url });
+          setEditingPromoId(null);
+          showNotification('Promo berhasil diubah!');
+        } else {
+          addPromo(url);
+          showNotification('Promo berhasil ditambahkan!');
+        }
+        setPromoFile(null); setUploadingPromo(false);
+        // Reset file input value
+        const fileInput = document.getElementById('promoFileInput');
+        if (fileInput) fileInput.value = '';
+      }
+    );
+  };
+
+  const handleEditPromoClick = (promo) => {
+    setEditingPromoId(promo.id);
+    showNotification('Silakan upload gambar baru untuk mengubah promo ini.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
 
@@ -62,25 +104,49 @@ function Admin() {
   const [skincareName, setSkincareName] = useState('');
   const [skincareFile, setSkincareFile] = useState(null);
   const [uploadingSkincare, setUploadingSkincare] = useState(false);
+  const [editingSkincareId, setEditingSkincareId] = useState(null);
+
+  const handleEditSkincare = (p) => {
+    setEditingSkincareId(p.id);
+    setSkincareName(p.name);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleAddSkincare = async (e) => {
     e.preventDefault();
-    if (!skincareName || !skincareFile) {
-      showNotification('Nama dan foto produk wajib diisi!');
+    if (!skincareName) {
+      showNotification('Nama produk wajib diisi!');
       return;
     }
+    if (!skincareFile && !editingSkincareId) {
+      showNotification('Foto produk wajib diisi!');
+      return;
+    }
+    
     setUploadingSkincare(true);
-    const storageRef = ref(storage, `skincare/${Date.now()}_${skincareFile.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, skincareFile);
-    uploadTask.on('state_changed', null, 
-      (err) => { setUploadingSkincare(false); showNotification('Gagal upload!'); },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        addSkincare({ name: skincareName, image: url });
-        setSkincareName(''); setSkincareFile(null); setUploadingSkincare(false);
-        showNotification('Produk berhasil ditambahkan!');
-      }
-    );
+
+    if (skincareFile) {
+      const storageRef = ref(storage, `skincare/${Date.now()}_${skincareFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, skincareFile);
+      uploadTask.on('state_changed', null, 
+        (err) => { setUploadingSkincare(false); showNotification('Gagal upload!'); },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          if (editingSkincareId) {
+            updateSkincare(editingSkincareId, { name: skincareName, image: url });
+            showNotification('Produk berhasil diubah!');
+          } else {
+            addSkincare({ name: skincareName, image: url });
+            showNotification('Produk berhasil ditambahkan!');
+          }
+          setSkincareName(''); setSkincareFile(null); setUploadingSkincare(false); setEditingSkincareId(null);
+        }
+      );
+    } else if (editingSkincareId) {
+      updateSkincare(editingSkincareId, { name: skincareName });
+      setSkincareName(''); setUploadingSkincare(false); setEditingSkincareId(null);
+      showNotification('Produk berhasil diubah!');
+    }
   };
 
   // --- Perawatan PDF State ---
@@ -88,11 +154,22 @@ function Admin() {
   const [perawatanFile, setPerawatanFile] = useState(null);
   const [perawatanImageFile, setPerawatanImageFile] = useState(null);
   const [uploadingPerawatan, setUploadingPerawatan] = useState(false);
+  const [editingPerawatanId, setEditingPerawatanId] = useState(null);
+
+  const handleEditPerawatan = (p) => {
+    setEditingPerawatanId(p.id);
+    setPerawatanName(p.name);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleAddPerawatanPDF = async (e) => {
     e.preventDefault();
-    if (!perawatanName || !perawatanFile) {
-      showNotification('Nama dan file PDF wajib diisi!');
+    if (!perawatanName) {
+      showNotification('Nama perawatan wajib diisi!');
+      return;
+    }
+    if (!perawatanFile && !editingPerawatanId) {
+      showNotification('File PDF wajib diisi!');
       return;
     }
     setUploadingPerawatan(true);
@@ -113,44 +190,76 @@ function Admin() {
       }
     }
 
-    const storageRef = ref(storage, `perawatan/${Date.now()}_${perawatanFile.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, perawatanFile);
-    uploadTask.on('state_changed', null, 
-      (err) => { setUploadingPerawatan(false); showNotification('Gagal upload!'); },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        const data = { name: perawatanName, pdfLink: url };
-        if (imgUrl) data.image = imgUrl;
-        addPerawatanPDF(data);
-        setPerawatanName(''); setPerawatanFile(null); setPerawatanImageFile(null); setUploadingPerawatan(false);
-        showNotification('Perawatan berhasil ditambahkan!');
-      }
-    );
+    if (perawatanFile) {
+      const storageRef = ref(storage, `perawatan/${Date.now()}_${perawatanFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, perawatanFile);
+      uploadTask.on('state_changed', null, 
+        (err) => { setUploadingPerawatan(false); showNotification('Gagal upload!'); },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          const data = { name: perawatanName, pdfLink: url };
+          if (imgUrl) data.image = imgUrl;
+          if (editingPerawatanId) {
+            updatePerawatanPDF(editingPerawatanId, data);
+            showNotification('Perawatan berhasil diubah!');
+          } else {
+            addPerawatanPDF(data);
+            showNotification('Perawatan berhasil ditambahkan!');
+          }
+          setPerawatanName(''); setPerawatanFile(null); setPerawatanImageFile(null); setUploadingPerawatan(false); setEditingPerawatanId(null);
+        }
+      );
+    } else if (editingPerawatanId) {
+      const data = { name: perawatanName };
+      if (imgUrl) data.image = imgUrl;
+      updatePerawatanPDF(editingPerawatanId, data);
+      setPerawatanName(''); setPerawatanFile(null); setPerawatanImageFile(null); setUploadingPerawatan(false); setEditingPerawatanId(null);
+      showNotification('Perawatan berhasil diubah!');
+    }
   };
 
   // --- Before After State ---
   const [baTitle, setBaTitle] = useState('');
   const [baFile, setBaFile] = useState(null);
   const [uploadingBa, setUploadingBa] = useState(false);
+  const [editingBaId, setEditingBaId] = useState(null);
+
+  const handleEditBa = (ba) => {
+    setEditingBaId(ba.id);
+    setBaTitle(ba.title === "Treatment By Enef Clinic" ? "" : ba.title);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleAddBeforeAfter = async (e) => {
     e.preventDefault();
-    if (!baFile) {
+    if (!baFile && !editingBaId) {
       showNotification('Foto Before-After wajib diisi!');
       return;
     }
     setUploadingBa(true);
-    const storageRef = ref(storage, `before_after/${Date.now()}_${baFile.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, baFile);
-    uploadTask.on('state_changed', null, 
-      (err) => { setUploadingBa(false); showNotification('Gagal upload!'); },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        addBeforeAfter({ title: baTitle || "Treatment By Enef Clinic", img: url, doctor: "Treatment by : dr. Enef" });
-        setBaTitle(''); setBaFile(null); setUploadingBa(false);
-        showNotification('Foto berhasil ditambahkan!');
-      }
-    );
+    
+    if (baFile) {
+      const storageRef = ref(storage, `before_after/${Date.now()}_${baFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, baFile);
+      uploadTask.on('state_changed', null, 
+        (err) => { setUploadingBa(false); showNotification('Gagal upload!'); },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          if (editingBaId) {
+            updateBeforeAfter(editingBaId, { title: baTitle || "Treatment By Enef Clinic", img: url, doctor: "Treatment by : dr. Enef" });
+            showNotification('Foto berhasil diubah!');
+          } else {
+            addBeforeAfter({ title: baTitle || "Treatment By Enef Clinic", img: url, doctor: "Treatment by : dr. Enef" });
+            showNotification('Foto berhasil ditambahkan!');
+          }
+          setBaTitle(''); setBaFile(null); setUploadingBa(false); setEditingBaId(null);
+        }
+      );
+    } else if (editingBaId) {
+      updateBeforeAfter(editingBaId, { title: baTitle || "Treatment By Enef Clinic", doctor: "Treatment by : dr. Enef" });
+      setBaTitle(''); setUploadingBa(false); setEditingBaId(null);
+      showNotification('Foto berhasil diubah!');
+    }
   };
 
   // --- Users State ---
@@ -175,6 +284,15 @@ function Admin() {
   const [testiQuote, setTestiQuote] = useState('');
   const [testiFile, setTestiFile] = useState(null);
   const [uploadingTesti, setUploadingTesti] = useState(false);
+  const [editingTestiId, setEditingTestiId] = useState(null);
+
+  const handleEditTestimonial = (t) => {
+    setEditingTestiId(t.id);
+    setTestiName(t.name);
+    setTestiTreatment(t.treatment);
+    setTestiQuote(t.quote);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleAddTestimonial = async (e) => {
     e.preventDefault();
@@ -191,15 +309,79 @@ function Admin() {
         (err) => { setUploadingTesti(false); showNotification('Gagal upload!'); },
         async () => {
           const url = await getDownloadURL(uploadTask.snapshot.ref);
-          addTestimonial({ name: testiName, treatment: testiTreatment, quote: testiQuote, image: url });
-          setTestiName(''); setTestiTreatment(''); setTestiQuote(''); setTestiFile(null); setUploadingTesti(false);
-          showNotification('Testimoni berhasil ditambahkan!');
+          if (editingTestiId) {
+            updateTestimonial(editingTestiId, { name: testiName, treatment: testiTreatment, quote: testiQuote, image: url });
+            showNotification('Testimoni berhasil diubah!');
+          } else {
+            addTestimonial({ name: testiName, treatment: testiTreatment, quote: testiQuote, image: url });
+            showNotification('Testimoni berhasil ditambahkan!');
+          }
+          setTestiName(''); setTestiTreatment(''); setTestiQuote(''); setTestiFile(null); setUploadingTesti(false); setEditingTestiId(null);
         }
       );
     } else {
-      addTestimonial({ name: testiName, treatment: testiTreatment, quote: testiQuote, image: '' });
-      setTestiName(''); setTestiTreatment(''); setTestiQuote('');
-      showNotification('Testimoni berhasil ditambahkan!');
+      if (editingTestiId) {
+        updateTestimonial(editingTestiId, { name: testiName, treatment: testiTreatment, quote: testiQuote });
+        showNotification('Testimoni berhasil diubah!');
+      } else {
+        addTestimonial({ name: testiName, treatment: testiTreatment, quote: testiQuote, image: '' });
+        showNotification('Testimoni berhasil ditambahkan!');
+      }
+      setTestiName(''); setTestiTreatment(''); setTestiQuote(''); setEditingTestiId(null);
+    }
+  };
+
+  // --- Article State ---
+  const [articleTitle, setArticleTitle] = useState('');
+  const [articleSummary, setArticleSummary] = useState('');
+  const [articleFile, setArticleFile] = useState(null);
+  const [uploadingArticle, setUploadingArticle] = useState(false);
+  const [editingArticleId, setEditingArticleId] = useState(null);
+
+  const handleEditArticle = (a) => {
+    setEditingArticleId(a.id);
+    setArticleTitle(a.title);
+    setArticleSummary(a.summary);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddArticle = async (e) => {
+    e.preventDefault();
+    if (!articleTitle || !articleSummary) {
+      showNotification('Judul dan ringkasan wajib diisi!');
+      return;
+    }
+    if (!articleFile && !editingArticleId) {
+      showNotification('Gambar artikel wajib diisi!');
+      return;
+    }
+
+    setUploadingArticle(true);
+    
+    if (articleFile) {
+      const storageRef = ref(storage, `articles/${Date.now()}_${articleFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, articleFile);
+      uploadTask.on('state_changed', null, 
+        (err) => { setUploadingArticle(false); showNotification('Gagal upload!'); },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          const options = { year: 'numeric', month: 'long', day: 'numeric' };
+          const date = new Date().toLocaleDateString('id-ID', options);
+          
+          if (editingArticleId) {
+            updateArticle(editingArticleId, { title: articleTitle, summary: articleSummary, image: url });
+            showNotification('Artikel berhasil diubah!');
+          } else {
+            addArticle({ title: articleTitle, summary: articleSummary, image: url, date });
+            showNotification('Artikel berhasil ditambahkan!');
+          }
+          setArticleTitle(''); setArticleSummary(''); setArticleFile(null); setUploadingArticle(false); setEditingArticleId(null);
+        }
+      );
+    } else if (editingArticleId) {
+      updateArticle(editingArticleId, { title: articleTitle, summary: articleSummary });
+      showNotification('Artikel berhasil diubah!');
+      setArticleTitle(''); setArticleSummary(''); setUploadingArticle(false); setEditingArticleId(null);
     }
   };
 
@@ -309,6 +491,27 @@ function Admin() {
   const [videoFile, setVideoFile] = useState(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [editingVideoId, setEditingVideoId] = useState(null);
+
+  const handleEditVideo = (video) => {
+    setEditingVideoId(video.id);
+    setVideoTitle(video.title || '');
+    // If it's a file from firebase, we might not want to prefill videoSrc
+    // But for links, it's good to prefill
+    setVideoSrc(video.src.includes('firebasestorage') ? '' : video.src);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const resetVideoForm = () => {
+    setVideoTitle('');
+    setVideoSrc('');
+    setVideoFile(null);
+    setUploadingVideo(false);
+    setUploadProgress(0);
+    setEditingVideoId(null);
+    const fileInput = document.getElementById('videoFileInput');
+    if (fileInput) fileInput.value = '';
+  };
 
   const handleVideoFileChange = (e) => {
     const file = e.target.files[0];
@@ -350,9 +553,14 @@ function Admin() {
         }, 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          addVideo({ title: videoTitle, src: downloadURL });
+          if (editingVideoId) {
+            updateVideo(editingVideoId, { title: videoTitle, src: downloadURL });
+            showNotification('Video berhasil diubah!');
+          } else {
+            addVideo({ title: videoTitle, src: downloadURL });
+            showNotification('Video berhasil ditambahkan!');
+          }
           resetVideoForm();
-          showNotification('Video berhasil ditambahkan!');
         }
       );
     } else if (videoSrc) {
@@ -364,22 +572,23 @@ function Admin() {
         }
         finalSrc += 'embed';
       }
-      addVideo({ title: videoTitle, src: finalSrc });
+      
+      if (editingVideoId) {
+        updateVideo(editingVideoId, { title: videoTitle, src: finalSrc });
+        showNotification('Video berhasil diubah!');
+      } else {
+        addVideo({ title: videoTitle, src: finalSrc });
+        showNotification('Video link berhasil ditambahkan!');
+      }
       resetVideoForm();
-      showNotification('Video link berhasil ditambahkan!');
+    } else if (editingVideoId && !videoFile && !videoSrc) {
+      // Allow saving just title change if no new file/link provided
+      updateVideo(editingVideoId, { title: videoTitle });
+      showNotification('Video berhasil diubah!');
+      resetVideoForm();
     } else {
       showNotification('Pilih file video atau masukkan link!');
     }
-  };
-
-  const resetVideoForm = () => {
-    setVideoTitle('');
-    setVideoSrc('');
-    setVideoFile(null);
-    setUploadingVideo(false);
-    setUploadProgress(0);
-    const fileInput = document.getElementById('videoFileInput');
-    if (fileInput) fileInput.value = null;
   };
 
   const handleRemovePromo = (id) => {
@@ -418,6 +627,18 @@ function Admin() {
     });
   };
 
+  const handleRemoveArticle = (id) => {
+    setConfirmDialog({
+      isOpen: true,
+      message: 'Apakah Anda yakin ingin menghapus artikel ini?',
+      onConfirm: () => {
+        removeArticle(id);
+        showNotification('Artikel berhasil dihapus!');
+        setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
+      }
+    });
+  };
+
   return (
     <div className="admin-layout">
       {/* Sidebar */}
@@ -434,6 +655,7 @@ function Admin() {
           <button className={`sidebar-btn ${activeTab === 'perawatan' ? 'active' : ''}`} onClick={() => setActiveTab('perawatan')}> Perawatan</button>
           <button className={`sidebar-btn ${activeTab === 'before_after' ? 'active' : ''}`} onClick={() => setActiveTab('before_after')}> Hasil Nyata</button>
           <button className={`sidebar-btn ${activeTab === 'testimonial' ? 'active' : ''}`} onClick={() => setActiveTab('testimonial')}> Testimoni</button>
+          <button className={`sidebar-btn ${activeTab === 'articles' ? 'active' : ''}`} onClick={() => setActiveTab('articles')}> Kelola Artikel</button>
           <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}> Manajemen Admin</button>
         </div>
       </aside>
@@ -455,10 +677,20 @@ function Admin() {
         {activeTab === 'promo' && (
           <div className="admin-card">
 
-            <h3 style={{ borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>Tambah Promo Slider Baru</h3>
-            <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '1.5rem' }}>*Upload gambar untuk slider halaman depan (Mode Demo).</p>
+            <h3 style={{ borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>{editingPromoId ? 'Edit Promo' : 'Tambah Promo Slider Baru'}</h3>
+            <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '1.5rem' }}>*Upload gambar untuk slider halaman depan.</p>
             <div className="admin-form-group">
-              <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, handleAddPromo)} className="admin-input" />
+              <input type="file" id="promoFileInput" accept="image/*" onChange={(e) => setPromoFile(e.target.files[0])} className="admin-input" />
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button onClick={handleAddPromo} className="admin-btn" disabled={uploadingPromo} style={{ flex: 1 }}>
+                  {uploadingPromo ? 'Mengunggah...' : (editingPromoId ? 'Simpan Perubahan' : 'Upload Promo')}
+                </button>
+                {editingPromoId && (
+                  <button onClick={() => setEditingPromoId(null)} className="admin-btn admin-btn-outline" style={{ flex: 1 }}>
+                    Batal Edit
+                  </button>
+                )}
+              </div>
             </div>
             
             <h3 style={{ marginTop: '3rem' }}>Daftar Promo Saat Ini</h3>
@@ -466,7 +698,10 @@ function Admin() {
               {promos.map((promo, idx) => (
                 <div key={promo.id || idx} style={{ position: 'relative', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden' }}>
                   <img src={promo.url || promo} alt="promo" style={{ width: '200px', height: '120px', objectFit: 'cover', display: 'block' }} />
-                  <button onClick={() => handleRemovePromo(promo.id)} className="admin-btn admin-btn-danger" style={{ position: 'absolute', top: '5px', right: '5px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
+                  <div style={{ position: 'absolute', top: '5px', right: '5px', display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handleEditPromoClick(promo)} className="admin-btn" style={{ background: 'var(--primary-color)', color: 'white', padding: '0.4rem 0.8rem', fontSize: '0.8rem', minWidth: 'auto' }}>Edit</button>
+                    <button onClick={() => handleRemovePromo(promo.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -561,7 +796,7 @@ function Admin() {
         {activeTab === 'video' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Video Baru</h3>
+              <h3>{editingVideoId ? 'Edit Video' : 'Tambah Video Baru'}</h3>
               <form onSubmit={handleAddVideo}>
                 <div className="admin-form-group">
                   <label>Judul Video</label>
@@ -588,10 +823,16 @@ function Admin() {
                     </div>
                   </div>
                 )}
-                
-                <button type="submit" className="admin-btn" style={{ width: '100%' }} disabled={uploadingVideo}>
-                  {uploadingVideo ? 'Sedang Menyimpan...' : 'Simpan Video'}
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingVideo}>
+                    {uploadingVideo ? 'Sedang Menyimpan...' : (editingVideoId ? 'Simpan Perubahan' : 'Simpan Video')}
+                  </button>
+                  {editingVideoId && (
+                    <button type="button" onClick={resetVideoForm} className="admin-btn admin-btn-outline" style={{ flex: 1 }}>
+                      Batal Edit
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -610,7 +851,10 @@ function Admin() {
                     <div style={{ flex: 1, marginLeft: '1rem' }}>
                       <div style={{ fontWeight: '600' }}>{v.title}</div>
                     </div>
-                    <button onClick={() => handleRemoveVideo(v.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditVideo(v)} className="admin-btn" style={{ padding: '0.5rem 1rem', background: '#e0e0e0', color: '#333' }}>Edit</button>
+                      <button onClick={() => handleRemoveVideo(v.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    </div>
                   </div>
                   );
                 })}
@@ -622,17 +866,22 @@ function Admin() {
         {activeTab === 'skincare' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Produk Skincare</h3>
+              <h3>{editingSkincareId ? 'Edit Produk Skincare' : 'Tambah Produk Skincare'}</h3>
               <form onSubmit={handleAddSkincare}>
                 <div className="admin-form-group">
                   <label>Nama Produk</label>
                   <input type="text" className="admin-input" value={skincareName} onChange={e => setSkincareName(e.target.value)} required />
                 </div>
                 <div className="admin-form-group">
-                  <label>Foto Produk</label>
-                  <input type="file" accept="image/*" className="admin-input" onChange={e => setSkincareFile(e.target.files[0])} required />
+                  <label>Foto Produk {editingSkincareId && '(Opsional)'}</label>
+                  <input type="file" accept="image/*" className="admin-input" onChange={e => setSkincareFile(e.target.files[0])} required={!editingSkincareId} />
                 </div>
-                <button type="submit" className="admin-btn" disabled={uploadingSkincare}>{uploadingSkincare ? 'Menyimpan...' : 'Simpan Produk'}</button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingSkincare}>{uploadingSkincare ? 'Menyimpan...' : (editingSkincareId ? 'Simpan Perubahan' : 'Simpan Produk')}</button>
+                  {editingSkincareId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingSkincareId(null); setSkincareName(''); setSkincareFile(null); }}>Batal Edit</button>
+                  )}
+                </div>
               </form>
             </div>
             <div className="admin-card" style={{ flex: 1 }}>
@@ -642,7 +891,10 @@ function Admin() {
                   <div key={p.id || idx} className="admin-list-item" style={{ alignItems: 'center' }}>
                     <img src={p.image} alt={p.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
                     <div style={{ flex: 1, marginLeft: '1rem', fontWeight: '600' }}>{p.name}</div>
-                    <button onClick={() => removeSkincare(p.id)} className="admin-btn admin-btn-danger">Hapus</button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditSkincare(p)} className="admin-btn" style={{ padding: '0.5rem 1rem', background: '#e0e0e0', color: '#333' }}>Edit</button>
+                      <button onClick={() => removeSkincare(p.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.5rem 1rem' }}>Hapus</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -653,21 +905,26 @@ function Admin() {
         {activeTab === 'perawatan' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Perawatan (PDF)</h3>
+              <h3>{editingPerawatanId ? 'Edit Perawatan (PDF)' : 'Tambah Perawatan (PDF)'}</h3>
               <form onSubmit={handleAddPerawatanPDF}>
                 <div className="admin-form-group">
                   <label>Nama Perawatan</label>
                   <input type="text" className="admin-input" value={perawatanName} onChange={e => setPerawatanName(e.target.value)} required />
                 </div>
                 <div className="admin-form-group">
-                  <label>Upload PDF</label>
-                  <input type="file" accept=".pdf" className="admin-input" onChange={e => setPerawatanFile(e.target.files[0])} required />
+                  <label>Upload PDF {editingPerawatanId && '(Opsional)'}</label>
+                  <input type="file" accept=".pdf" className="admin-input" onChange={e => setPerawatanFile(e.target.files[0])} required={!editingPerawatanId} />
                 </div>
                 <div className="admin-form-group">
                   <label>Upload Gambar (Opsional)</label>
                   <input type="file" accept="image/*" className="admin-input" onChange={e => setPerawatanImageFile(e.target.files[0])} />
                 </div>
-                <button type="submit" className="admin-btn" disabled={uploadingPerawatan}>{uploadingPerawatan ? 'Menyimpan...' : 'Simpan Perawatan'}</button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingPerawatan}>{uploadingPerawatan ? 'Menyimpan...' : (editingPerawatanId ? 'Simpan Perubahan' : 'Simpan Perawatan')}</button>
+                  {editingPerawatanId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingPerawatanId(null); setPerawatanName(''); setPerawatanFile(null); setPerawatanImageFile(null); }}>Batal Edit</button>
+                  )}
+                </div>
               </form>
             </div>
             <div className="admin-card" style={{ flex: 1 }}>
@@ -679,7 +936,10 @@ function Admin() {
                       <div style={{ fontWeight: '600' }}>{p.name}</div>
                       <a href={p.pdfLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: 'var(--primary-color)', textDecoration: 'underline' }}>Lihat File PDF</a>
                     </div>
-                    <button onClick={() => removePerawatanPDF(p.id)} className="admin-btn admin-btn-danger">Hapus</button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditPerawatan(p)} className="admin-btn" style={{ padding: '0.5rem 1rem', background: '#e0e0e0', color: '#333' }}>Edit</button>
+                      <button onClick={() => removePerawatanPDF(p.id)} className="admin-btn admin-btn-danger">Hapus</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -690,17 +950,22 @@ function Admin() {
         {activeTab === 'before_after' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Foto Hasil Nyata (Before-After)</h3>
+              <h3>{editingBaId ? 'Edit Foto Hasil Nyata' : 'Tambah Foto Hasil Nyata (Before-After)'}</h3>
               <form onSubmit={handleAddBeforeAfter}>
                 <div className="admin-form-group">
                   <label>Judul Hasil (Opsional)</label>
                   <input type="text" className="admin-input" placeholder="Contoh: Acne Grade 3" value={baTitle} onChange={e => setBaTitle(e.target.value)} />
                 </div>
                 <div className="admin-form-group">
-                  <label>Upload Foto</label>
-                  <input type="file" accept="image/*" className="admin-input" onChange={e => setBaFile(e.target.files[0])} required />
+                  <label>Upload Foto {editingBaId && '(Opsional)'}</label>
+                  <input type="file" accept="image/*" className="admin-input" onChange={e => setBaFile(e.target.files[0])} required={!editingBaId} />
                 </div>
-                <button type="submit" className="admin-btn" disabled={uploadingBa}>{uploadingBa ? 'Menyimpan...' : 'Simpan Foto'}</button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingBa}>{uploadingBa ? 'Menyimpan...' : (editingBaId ? 'Simpan Perubahan' : 'Simpan Foto')}</button>
+                  {editingBaId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingBaId(null); setBaTitle(''); setBaFile(null); }}>Batal Edit</button>
+                  )}
+                </div>
               </form>
             </div>
             <div className="admin-card" style={{ flex: 1 }}>
@@ -709,7 +974,10 @@ function Admin() {
                 {beforeAfterImages.map((b, idx) => (
                   <div key={b.id || idx} style={{ position: 'relative', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden' }}>
                     <img src={b.img} alt={b.title} style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
-                    <button onClick={() => removeBeforeAfter(b.id)} className="admin-btn admin-btn-danger" style={{ position: 'absolute', top: '5px', right: '5px', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>Hapus</button>
+                    <div style={{ position: 'absolute', top: '5px', right: '5px', display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditBa(b)} className="admin-btn" style={{ background: 'var(--primary-color)', color: 'white', padding: '0.3rem 0.6rem', fontSize: '0.8rem', minWidth: 'auto' }}>Edit</button>
+                      <button onClick={() => removeBeforeAfter(b.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>Hapus</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -750,7 +1018,7 @@ function Admin() {
         {activeTab === 'testimonial' && (
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
             <div className="admin-card" style={{ flex: 1 }}>
-              <h3>Tambah Testimoni</h3>
+              <h3>{editingTestiId ? 'Edit Testimoni' : 'Tambah Testimoni'}</h3>
               <form onSubmit={handleAddTestimonial}>
                 <div className="admin-form-group">
                   <label>Nama Pasien</label>
@@ -768,7 +1036,12 @@ function Admin() {
                   <label>Foto Pasien (Opsional)</label>
                   <input type="file" accept="image/*" className="admin-input" onChange={e => setTestiFile(e.target.files[0])} />
                 </div>
-                <button type="submit" className="admin-btn" disabled={uploadingTesti}>{uploadingTesti ? 'Menyimpan...' : 'Simpan Testimoni'}</button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingTesti}>{uploadingTesti ? 'Menyimpan...' : (editingTestiId ? 'Simpan Perubahan' : 'Simpan Testimoni')}</button>
+                  {editingTestiId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingTestiId(null); setTestiName(''); setTestiTreatment(''); setTestiQuote(''); setTestiFile(null); }}>Batal Edit</button>
+                  )}
+                </div>
               </form>
             </div>
             <div className="admin-card" style={{ flex: 1 }}>
@@ -784,7 +1057,61 @@ function Admin() {
                       <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.5rem' }}>{t.treatment}</div>
                       <div style={{ fontSize: '0.9rem', fontStyle: 'italic', color: '#444' }}>"{t.quote}"</div>
                     </div>
-                    <button onClick={() => removeTestimonial(t.id)} className="admin-btn admin-btn-danger" style={{ marginLeft: '1rem' }}>Hapus</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
+                      <button onClick={() => handleEditTestimonial(t)} className="admin-btn" style={{ padding: '0.4rem 0.8rem', background: '#e0e0e0', color: '#333', fontSize: '0.8rem' }}>Edit</button>
+                      <button onClick={() => removeTestimonial(t.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'articles' && (
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+            <div className="admin-card" style={{ flex: 1 }}>
+              <h3>{editingArticleId ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h3>
+              <form onSubmit={handleAddArticle}>
+                <div className="admin-form-group">
+                  <label>Judul Artikel</label>
+                  <input type="text" className="admin-input" placeholder="Masukkan judul" value={articleTitle} onChange={e => setArticleTitle(e.target.value)} required />
+                </div>
+                <div className="admin-form-group">
+                  <label>Ringkasan/Isi Singkat</label>
+                  <textarea className="admin-input" placeholder="Masukkan ringkasan atau isi singkat artikel" value={articleSummary} onChange={e => setArticleSummary(e.target.value)} rows="5" required />
+                </div>
+                <div className="admin-form-group">
+                  <label>Upload Gambar Artikel {editingArticleId && '(Opsional)'}</label>
+                  <input type="file" accept="image/*" className="admin-input" onChange={e => setArticleFile(e.target.files[0])} required={!editingArticleId} />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="admin-btn" disabled={uploadingArticle} style={{ flex: 1 }}>
+                    {uploadingArticle ? 'Menyimpan...' : (editingArticleId ? 'Simpan Perubahan' : 'Simpan Artikel')}
+                  </button>
+                  {editingArticleId && (
+                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingArticleId(null); setArticleTitle(''); setArticleSummary(''); setArticleFile(null); }}>Batal Edit</button>
+                  )}
+                </div>
+              </form>
+            </div>
+            
+            <div className="admin-card" style={{ flex: 1 }}>
+              <h3>Daftar Artikel</h3>
+              <div>
+                {articles.map((a, idx) => (
+                  <div key={a.id || idx} className="admin-list-item">
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <img src={a.image && a.image.startsWith('/') ? `${import.meta.env.BASE_URL}${a.image.substring(1)}` : a.image} alt="Artikel" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#222' }}>{a.title}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#888' }}>{a.date}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditArticle(a)} className="admin-btn" style={{ padding: '0.4rem 0.8rem', background: '#e0e0e0', color: '#333', fontSize: '0.8rem' }}>Edit</button>
+                      <button onClick={() => handleRemoveArticle(a.id)} className="admin-btn admin-btn-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Hapus</button>
+                    </div>
                   </div>
                 ))}
               </div>

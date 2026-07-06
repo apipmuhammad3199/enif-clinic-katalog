@@ -270,7 +270,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif;
 }
 
-/* Promo Slider (Crossfade & Full Width Auto-Height) */
+/* Promo Slider (Crossfade) */
 .promo-slider {
   display: grid;
   width: 100%;
@@ -295,34 +295,11 @@ h1, h2, h3, h4, h5, h6 {
 .slide img {
   width: 100%;
   height: auto;
+  max-height: 70vh;
   object-fit: contain;
   display: block;
 }
 
-.slider-dots {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.5rem;
-}
-
-.slider-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid white;
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.3s ease;
-}
-
-.slider-dot.active {
-  background: white;
-  transform: scale(1.2);
-}
 
 /* Hero Section (Search) */
 .hero {
