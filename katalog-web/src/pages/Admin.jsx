@@ -143,14 +143,6 @@ function Admin() {
   };
 
 
-  const handleFileChange = (e, callback) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      callback(url);
-    }
-  };
-
   const [promoFile, setPromoFile] = useState(null);
   const [uploadingPromo, setUploadingPromo] = useState(false);
   const [editingPromoId, setEditingPromoId] = useState(null);

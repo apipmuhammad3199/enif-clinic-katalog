@@ -40,9 +40,14 @@ const calculateDiscountedPrice = (priceStr, discountPercent) => {
   }).format(discountedPrice);
 };
 
+// blob: URLs are only valid within the browser session that created them (e.g. an old
+// admin-upload bug that saved URL.createObjectURL() output straight to Firestore) —
+// treat them as no link at all so the fallback chain below kicks in instead.
+const isUsablePdfLink = (link) => Boolean(link) && link !== '#' && !link.startsWith('blob:');
+
 const TreatmentCard = ({ treatment, isProduct = false }) => {
   const { perawatanPDFs } = useContext(CMSContext);
-  
+
   // Try to find a matching PDF from the CMS if it doesn't already have one
   const matchedPdf = perawatanPDFs?.find(p => p.name?.trim().toLowerCase() === treatment.name?.trim().toLowerCase());
   
@@ -57,7 +62,9 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
     ? `${import.meta.env.BASE_URL}assets/perawatan/BODY%20TREATMENT2.pdf`
     : null;
 
-  const finalPdfLink = preferredPdfLink || treatment.pdfLink || (matchedPdf ? matchedPdf.pdfLink : null);
+  const finalPdfLink = preferredPdfLink
+    || (isUsablePdfLink(treatment.pdfLink) ? treatment.pdfLink : null)
+    || (isUsablePdfLink(matchedPdf?.pdfLink) ? matchedPdf.pdfLink : null);
   
   const pdfUrl = finalPdfLink 
     || (localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/${localMatch}` : null)
