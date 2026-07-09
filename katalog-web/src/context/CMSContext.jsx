@@ -380,10 +380,10 @@ export const CMSProvider = ({ children }) => {
   };
 
   const addPerawatanPDF = async (pdf) => {
-    try { await addDoc(collection(db, 'perawatan_pdfs'), { ...pdf, createdAt: Date.now() }); } catch (e) { console.error(e); }
+    try { await addDoc(collection(db, 'perawatan_pdfs'), { ...pdf, createdAt: Date.now() }); } catch (e) { console.error(e); throw e; }
   };
   const updatePerawatanPDF = async (id, updatedData) => {
-    try { await setDoc(doc(db, 'perawatan_pdfs', id), updatedData, { merge: true }); } catch (e) { console.error(e); }
+    try { await setDoc(doc(db, 'perawatan_pdfs', id), updatedData, { merge: true }); } catch (e) { console.error(e); throw e; }
   };
   const removePerawatanPDF = async (id) => {
     try { await deleteDoc(doc(db, 'perawatan_pdfs', id)); } catch (e) { console.error(e); }

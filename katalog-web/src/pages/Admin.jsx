@@ -287,11 +287,11 @@ function Admin() {
       if (imgUrl) updateData.image = imgUrl;
 
       if (editingPerawatanId) {
-        updatePerawatanPDF(editingPerawatanId, updateData);
+        await updatePerawatanPDF(editingPerawatanId, updateData);
         setEditingPerawatanId(null);
         showNotification('Perawatan berhasil diubah!');
       } else {
-        addPerawatanPDF(updateData);
+        await addPerawatanPDF(updateData);
         showNotification('Perawatan berhasil ditambahkan!');
       }
 
