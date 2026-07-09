@@ -13,8 +13,17 @@ function Perawatan() {
   const { treatments } = useContext(CMSContext);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredTreatments = (treatments || [])
-    .filter(t => t.pdfLink && t.pdfLink !== '#')
+  const uniqueTreatments = Object.values(
+    (treatments || [])
+      .filter(t => t.pdfLink && t.pdfLink !== '#')
+      .reduce((acc, t) => {
+        const key = t.name?.trim().toLowerCase();
+        if (key && !acc[key]) acc[key] = t;
+        return acc;
+      }, {})
+  );
+
+  const filteredTreatments = uniqueTreatments
     .filter(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
