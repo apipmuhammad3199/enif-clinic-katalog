@@ -1,8 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
-import { storage } from '../firebase';
-import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -13,12 +11,9 @@ const fileToBase64 = (file) => {
   });
 };
 
-const uploadFileToStorage = async (file, folder = 'pdfs') => {
+const uploadFileToBase64 = async (file) => {
   if (!file) return null;
-  const fileName = `${Date.now()}_${file.name}`;
-  const fileRef = ref(storage, `${folder}/${fileName}`);
-  await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
+  return await fileToBase64(file);
 };
 
 const compressImageToBase64 = async (file, maxWidth = 800) => {
@@ -100,7 +95,7 @@ function Admin() {
   const handleSyncLocalPDFs = async () => {
     try {
       const localPdfs = [
-        "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT.pdf", "BOTOX TREATMENT.pdf",
+        "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT2.pdf", "BOTOX TREATMENT.pdf",
         "CAUTER.pdf", "FACE CONTOUR TREATMENT.pdf", "FACIAL TREATMENT.pdf", "FILLER.pdf",
         "GLOWING TREATMENT.pdf", "HAIR REMOVEL TRATMENT.pdf", "INJECTION TREATMENT.pdf",
         "LASER TREATMENT.pdf", "LUXURY SKINBOOSTER.pdf", "MASSAGE BADAN.pdf",
@@ -108,21 +103,34 @@ function Admin() {
         "PEELING.pdf", "RADIO FREQUENCY.pdf", "SCAR TREATMENT.pdf", "SUBSISI.pdf",
         "THREADLIFT..pdf", "TUNGGAL TREATMENT.pdf", "WHITENING TREATMENT.pdf"
       ];
-      
-      const existingNames = perawatanPDFs.map(p => p.name?.toLowerCase().trim());
-      let added = 0;
+
+      let synced = 0;
 
       for (const filename of localPdfs) {
         const cleanName = filename.replace(/\.+pdf$/i, '').trim();
-        if (!existingNames.includes(cleanName.toLowerCase())) {
-          await addPerawatanPDF({
+        const existingTreatment = treatments.find(t => t.name?.trim().toLowerCase() === cleanName.toLowerCase());
+        const pdfLink = `${import.meta.env.BASE_URL}assets/perawatan/${filename}`;
+
+        if (existingTreatment) {
+          if (!existingTreatment.pdfLink || existingTreatment.pdfLink !== pdfLink) {
+            await updateTreatment(existingTreatment.id, { pdfLink });
+            synced++;
+          }
+        } else {
+          await addTreatment({
             name: cleanName,
-            pdfLink: `${import.meta.env.BASE_URL}assets/perawatan/${filename}`
+            description: '',
+            price: '',
+            discount: 0,
+            startDate: '',
+            endDate: '',
+            pdfLink
           });
-          added++;
+          synced++;
         }
       }
-      showNotification(`Berhasil! ${added} PDF lokal telah ditambahkan ke CMS.`);
+
+      showNotification(`Berhasil! ${synced} item perawatan disinkronisasi dengan PDF lokal.`);
     } catch (error) {
       console.error("Error syncing PDFs:", error);
       showNotification("Terjadi kesalahan saat mensinkronisasi.");
@@ -241,69 +249,6 @@ function Admin() {
     } catch (err) {
       console.error("Upload error: ", err);
       setUploadingSkincare(false);
-      showNotification('Gagal upload: ' + (err.message || 'Error tidak diketahui'));
-    }
-  };
-
-  // --- Perawatan PDF State ---
-  const [perawatanName, setPerawatanName] = useState('');
-  const [perawatanPdfLink, setPerawatanPdfLink] = useState('');
-  const [perawatanFile, setPerawatanFile] = useState(null);
-  const [perawatanImageFile, setPerawatanImageFile] = useState(null);
-  const [uploadingPerawatan, setUploadingPerawatan] = useState(false);
-  const [editingPerawatanId, setEditingPerawatanId] = useState(null);
-
-  const handleEditPerawatan = (p) => {
-    setEditingPerawatanId(p.id);
-    setPerawatanName(p.name);
-    setPerawatanPdfLink(p.pdfLink || '');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleAddPerawatanPDF = async (e) => {
-    e.preventDefault();
-    if (!perawatanName) {
-      showNotification('Nama perawatan wajib diisi!');
-      return;
-    }
-    if (!perawatanFile && !perawatanPdfLink && !editingPerawatanId) {
-      showNotification('File PDF atau Link Eksternal wajib diisi!');
-      return;
-    }
-    setUploadingPerawatan(true);
-    
-    try {
-      let imgUrl = '';
-      let finalPdfUrl = perawatanPdfLink;
-      
-      if (perawatanImageFile) {
-        imgUrl = await compressImageToBase64(perawatanImageFile);
-      }
-      
-      if (perawatanFile) {
-        finalPdfUrl = await uploadFileToStorage(perawatanFile, 'perawatan_pdfs');
-      }
-      
-      const updateData = { name: perawatanName };
-      if (finalPdfUrl) updateData.pdfLink = finalPdfUrl;
-      if (imgUrl) updateData.image = imgUrl;
-
-      if (editingPerawatanId) {
-        await updatePerawatanPDF(editingPerawatanId, updateData);
-        setEditingPerawatanId(null);
-        showNotification('Perawatan berhasil diubah!');
-      } else {
-        await addPerawatanPDF(updateData);
-        showNotification('Perawatan berhasil ditambahkan!');
-      }
-
-      setPerawatanName(''); setPerawatanPdfLink(''); setPerawatanFile(null); setPerawatanImageFile(null); 
-      setUploadingPerawatan(false);
-      const inputs = document.querySelectorAll('input[type="file"]');
-      inputs.forEach(i => i.value = '');
-    } catch (err) {
-      console.error("Upload error: ", err);
-      setUploadingPerawatan(false);
       showNotification('Gagal upload: ' + (err.message || 'Error tidak diketahui'));
     }
   };
@@ -547,7 +492,7 @@ function Admin() {
       
       let finalPdfUrl = treatmentPdf;
       if (treatmentPdfFile) {
-        finalPdfUrl = await uploadFileToStorage(treatmentPdfFile, 'treatment_pdfs');
+        finalPdfUrl = await uploadFileToBase64(treatmentPdfFile);
       }
       
       const data = {
@@ -706,7 +651,7 @@ function Admin() {
     });
   };
 
-  const isUploadingAny = uploadingPromo || uploadingVideo || uploadingBa || uploadingTesti || uploadingArticle || uploadingPerawatan || uploadingTreatmentImage;
+  const isUploadingAny = uploadingPromo || uploadingVideo || uploadingBa || uploadingTesti || uploadingArticle || uploadingTreatmentImage;
 
   return (
     <div className="admin-layout" style={{ position: 'relative' }}>
@@ -1000,54 +945,14 @@ function Admin() {
         )}
 
         {activeTab === 'perawatan' && (
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-            <div className="admin-card" style={{ flex: 1 }}>
-              <h3>{editingPerawatanId ? 'Edit Perawatan (PDF)' : 'Tambah Perawatan (PDF)'}</h3>
-              <form onSubmit={handleAddPerawatanPDF}>
-                <div className="admin-form-group">
-                  <label>Nama Perawatan</label>
-                  <input type="text" className="admin-input" value={perawatanName} onChange={e => setPerawatanName(e.target.value)} required />
-                </div>
-                <div className="admin-form-group">
-                  <label>Upload PDF {editingPerawatanId && '(Opsional)'}</label>
-                  <input type="file" accept=".pdf" className="admin-input" onChange={e => setPerawatanFile(e.target.files[0])} />
-                </div>
-                <div className="admin-form-group">
-                  <label>Atau Link PDF Eksternal</label>
-                  <input type="text" className="admin-input" value={perawatanPdfLink} onChange={e => setPerawatanPdfLink(e.target.value)} placeholder="https://..." />
-                </div>
-                <div className="admin-form-group">
-                  <label>Upload Gambar (Opsional)</label>
-                  <input type="file" accept="image/*" className="admin-input" onChange={e => setPerawatanImageFile(e.target.files[0])} />
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button type="submit" className="admin-btn" style={{ flex: 1 }} disabled={uploadingPerawatan}>{uploadingPerawatan ? 'Menyimpan...' : (editingPerawatanId ? 'Simpan Perubahan' : 'Simpan Perawatan')}</button>
-                  {editingPerawatanId && (
-                    <button type="button" className="admin-btn admin-btn-outline" style={{ flex: 1 }} onClick={() => { setEditingPerawatanId(null); setPerawatanName(''); setPerawatanPdfLink(''); setPerawatanFile(null); setPerawatanImageFile(null); }}>Batal Edit</button>
-                  )}
-                </div>
-              </form>
-            </div>
-            <div className="admin-card" style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ margin: 0 }}>Daftar Perawatan</h3>
-                <button onClick={handleSyncLocalPDFs} className="admin-btn" style={{ background: '#28a745', fontSize: '0.8rem', padding: '0.4rem 0.8rem', minWidth: 'auto' }}>Sync 24 PDF Lokal</button>
-              </div>
-              <div>
-                {perawatanPDFs.map((p, idx) => (
-                  <div key={p.id || idx} className="admin-list-item">
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '600' }}>{p.name}</div>
-                      <a href={p.pdfLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: 'var(--primary-color)', textDecoration: 'underline' }}>Lihat File PDF</a>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => handleEditPerawatan(p)} className="admin-btn" style={{ padding: '0.5rem 1rem', background: '#e0e0e0', color: '#333' }}>Edit</button>
-                      <button onClick={() => removePerawatanPDF(p.id)} className="admin-btn admin-btn-danger">Hapus</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="admin-card">
+            <h3 style={{ marginTop: 0 }}>Perawatan</h3>
+            <p style={{ color: '#666', marginBottom: '1rem' }}>
+              Halaman Perawatan menampilkan daftar treatment yang sudah memiliki PDF. Untuk mengelola isinya, gunakan bagian Kelola Treatment.
+            </p>
+            <button onClick={handleSyncLocalPDFs} className="admin-btn" style={{ background: '#28a745' }}>
+              Sinkronkan PDF Lokal ke Treatment
+            </button>
           </div>
         )}
 

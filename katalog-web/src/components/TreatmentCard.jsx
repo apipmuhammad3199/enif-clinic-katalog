@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
 import localPdfs from '../data/localPdfs.json';
 
+const normalizeName = (value = '') => (value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, ' ');
+
+const isSameTreatmentName = (left, right) => {
+  const leftName = normalizeName(left);
+  const rightName = normalizeName(right);
+  return leftName === rightName || leftName === `${rightName} 2` || `${leftName} 2` === rightName;
+};
+
 const getDiscountBadge = (discount) => {
   if (discount === 50) return <div className="badge badge-50">50% OFF</div>;
   if (discount === 45) return <div className="badge badge-45">45% OFF</div>;
@@ -40,12 +48,16 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
   
   // Try to find a matching PDF from the local assets/perawatan folder
   const localMatch = localPdfs.find(filename => {
-    const cleanFile = filename.replace(/\.+pdf$/i, '').trim().toLowerCase();
-    const cleanName = treatment.name?.trim().toLowerCase() || '';
-    return cleanFile === cleanName || cleanFile.includes(cleanName) || cleanName.includes(cleanFile);
+    const cleanFile = filename.replace(/\.+pdf$/i, '').trim();
+    const cleanName = treatment.name?.trim() || '';
+    return isSameTreatmentName(cleanFile, cleanName) || cleanFile.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(cleanFile.toLowerCase());
   });
 
-  const finalPdfLink = treatment.pdfLink || (matchedPdf ? matchedPdf.pdfLink : null);
+  const preferredPdfLink = (treatment.name || '').toLowerCase().includes('body treatment')
+    ? `${import.meta.env.BASE_URL}assets/perawatan/BODY%20TREATMENT2.pdf`
+    : null;
+
+  const finalPdfLink = preferredPdfLink || treatment.pdfLink || (matchedPdf ? matchedPdf.pdfLink : null);
   
   const pdfUrl = finalPdfLink 
     || (localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/${localMatch}` : null)

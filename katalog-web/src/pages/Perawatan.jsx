@@ -10,12 +10,13 @@ import '../index.css';
 import { CMSContext } from '../context/CMSContext';
 
 function Perawatan() {
-  const { perawatanPDFs } = useContext(CMSContext);
+  const { treatments } = useContext(CMSContext);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredPDFs = (perawatanPDFs || []).filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTreatments = (treatments || [])
+    .filter(t => t.pdfLink && t.pdfLink !== '#')
+    .filter(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -43,14 +44,14 @@ function Perawatan() {
           />
         </div>
 
-        {filteredPDFs.length === 0 ? (
+        {filteredTreatments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-light)' }}>
             {searchTerm ? 'Perawatan tidak ditemukan.' : 'Saat ini tidak ada perawatan.'}
           </div>
         ) : (
           <div className="catalog-grid">
-            {filteredPDFs.map((pdf, index) => (
-              <TreatmentCard key={index} treatment={{ ...pdf, effectiveDiscount: 0, endDate: null, discount: 0 }} />
+            {filteredTreatments.map((treatment, index) => (
+              <TreatmentCard key={treatment.id || index} treatment={{ ...treatment, effectiveDiscount: 0, endDate: null, discount: 0 }} />
             ))}
           </div>
         )}

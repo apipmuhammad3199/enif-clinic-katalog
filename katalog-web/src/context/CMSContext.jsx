@@ -93,7 +93,7 @@ export const CMSProvider = ({ children }) => {
           const existingPdfNames = pdfsSnap.docs.map(doc => doc.data().name?.trim().toLowerCase());
           
           const localPdfs = [
-            "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT.pdf", "BOTOX TREATMENT.pdf",
+            "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT2.pdf", "BOTOX TREATMENT.pdf",
             "CAUTER.pdf", "FACE CONTOUR TREATMENT.pdf", "FACIAL TREATMENT.pdf", "FILLER.pdf",
             "GLOWING TREATMENT.pdf", "HAIR REMOVEL TRATMENT.pdf", "INJECTION TREATMENT.pdf",
             "LASER TREATMENT.pdf", "LUXURY SKINBOOSTER.pdf", "MASSAGE BADAN.pdf",
