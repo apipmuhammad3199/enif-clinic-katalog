@@ -10,25 +10,28 @@ import '../index.css';
 import { CMSContext } from '../context/CMSContext';
 
 const CATEGORY_ORDER = [
-  ["facial"],
-  ["whitening"],
-  ["melasma", "flek", "flex"],
-  ["acne"],
-  ["scar"],
-  ["glow"],
-  ["luxury", "skinbooster"],
-  ["botox"],
-  ["mesolipo"],
-  ["paket body", "body contour"],
-  ["filler"],
-  ["threadlift"],
-  ["hair remov"],
-  ["laser"],
-  ["radio frequency"],
-  ["peeling"],
-  ["cauter"],
-  ["injection"],
-  ["subsisi"]
+  (name) => name.includes("facial"),
+  (name) => name.includes("whitening"),
+  (name) => name.includes("melasma") || name.includes("flek") || name.includes("flex"),
+  (name) => name.includes("acne"),
+  (name) => name.includes("scar"),
+  (name) => name.includes("glow"),
+  (name) => name.includes("face contour"),
+  (name) => name.includes("body treatment"),
+  (name) => name.includes("body contour") && !name.includes("paket"),
+  (name) => name.includes("luxury") || name.includes("skinbooster"),
+  (name) => name.includes("botox"),
+  (name) => name.includes("mesolipo"),
+  (name) => name.includes("paket body"),
+  (name) => name.includes("filler"),
+  (name) => name.includes("threadlift"),
+  (name) => name.includes("hair remov"),
+  (name) => name.includes("laser"),
+  (name) => name.includes("radio frequency"),
+  (name) => name.includes("peeling"),
+  (name) => name.includes("cauter"),
+  (name) => name.includes("injection"),
+  (name) => name.includes("subsisi")
 ];
 
 function Perawatan() {
@@ -49,9 +52,7 @@ function Perawatan() {
     if (!name) return 999;
     const lowerName = name.toLowerCase();
     
-    const index = CATEGORY_ORDER.findIndex(terms => 
-      terms.some(term => lowerName.includes(term))
-    );
+    const index = CATEGORY_ORDER.findIndex(matchFn => matchFn(lowerName));
     
     return index !== -1 ? index : 999;
   };
