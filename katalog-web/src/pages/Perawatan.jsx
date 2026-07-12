@@ -42,8 +42,17 @@ function Perawatan() {
     (treatments || [])
       .filter(t => t.pdfLink && t.pdfLink !== '#')
       .reduce((acc, t) => {
-        const key = t.name?.trim().toLowerCase();
-        if (key && !acc[key]) acc[key] = t;
+        let key = t.name?.trim().toLowerCase();
+        if (!key) return acc;
+
+        if (key.includes('melasma') || key.includes('flek') || key.includes('flex')) {
+          key = 'melasma / flex treatment';
+          t = { ...t, name: 'Melasma / Flex Treatment' };
+        }
+
+        if (!acc[key]) {
+          acc[key] = t;
+        }
         return acc;
       }, {})
   );
