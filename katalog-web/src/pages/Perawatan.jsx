@@ -8,7 +8,27 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import '../index.css';
 import { CMSContext } from '../context/CMSContext';
-import { sortTreatments } from '../utils/sortTreatments';
+
+const ORDERED_CATEGORIES = [
+  "facial",
+  "whitening treatment",
+  "melasma",
+  "acne treatment",
+  "scar treatment",
+  "glow", 
+  "luxury skinbooster",
+  "botox",
+  "mesolipo",
+  "paket body contour",
+  "filler",
+  "threadlift",
+  "hair remov",
+  "laser treatment",
+  "radio frequency",
+  "peeling",
+  "injection treatment",
+  "subsisi"
+];
 
 function Perawatan() {
   const { treatments } = useContext(CMSContext);
@@ -24,9 +44,17 @@ function Perawatan() {
       }, {})
   );
 
-  const filteredTreatments = sortTreatments(
-    uniqueTreatments.filter(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const getSortIndex = (name) => {
+    if (!name) return 999;
+    const lowerName = name.toLowerCase();
+    
+    const index = ORDERED_CATEGORIES.findIndex(cat => lowerName.includes(cat));
+    return index !== -1 ? index : 999;
+  };
+
+  const filteredTreatments = uniqueTreatments
+    .filter(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -74,4 +102,3 @@ function Perawatan() {
 }
 
 export default Perawatan;
-
