@@ -9,25 +9,25 @@ import 'aos/dist/aos.css';
 import '../index.css';
 import { CMSContext } from '../context/CMSContext';
 
-const ORDERED_CATEGORIES = [
-  "facial",
-  "whitening treatment",
-  "melasma",
-  "acne treatment",
-  "scar treatment",
-  "glow", 
-  "luxury skinbooster",
-  "botox",
-  "mesolipo",
-  "paket body contour",
-  "filler",
-  "threadlift",
-  "hair remov",
-  "laser treatment",
-  "radio frequency",
-  "peeling",
-  "injection treatment",
-  "subsisi"
+const CATEGORY_CONFIG = [
+  { displayName: "Facial", searchTerms: ["facial"] },
+  { displayName: "Whitening Treatment", searchTerms: ["whitening"] },
+  { displayName: "Melasma / Flex Treatment", searchTerms: ["melasma", "flek", "flex"] },
+  { displayName: "Acne Treatment", searchTerms: ["acne"] },
+  { displayName: "Scar Treatment", searchTerms: ["scar"] },
+  { displayName: "Glow Treatment", searchTerms: ["glow"] },
+  { displayName: "Luxury Skinbooster", searchTerms: ["luxury", "skinbooster"] },
+  { displayName: "Botox Treatment", searchTerms: ["botox"] },
+  { displayName: "Mesolipo", searchTerms: ["mesolipo"] },
+  { displayName: "Paket Body Contour", searchTerms: ["paket body", "body contour"] },
+  { displayName: "Filler", searchTerms: ["filler"] },
+  { displayName: "Threadlift", searchTerms: ["threadlift"] },
+  { displayName: "Hair Removal Treatment", searchTerms: ["hair remov"] },
+  { displayName: "Laser Treatment", searchTerms: ["laser"] },
+  { displayName: "Radio Frequency", searchTerms: ["radio frequency"] },
+  { displayName: "Peeling", searchTerms: ["peeling"] },
+  { displayName: "Injection Treatment", searchTerms: ["injection"] },
+  { displayName: "Subsisi", searchTerms: ["subsisi"] }
 ];
 
 function Perawatan() {
@@ -44,17 +44,24 @@ function Perawatan() {
       }, {})
   );
 
-  const getSortIndex = (name) => {
-    if (!name) return 999;
-    const lowerName = name.toLowerCase();
+  // Map the configuration to actual matched treatments
+  const mappedTreatments = CATEGORY_CONFIG.map(config => {
+    // Find the best match in uniqueTreatments
+    const match = uniqueTreatments.find(t => 
+      config.searchTerms.some(term => t.name?.toLowerCase().includes(term))
+    );
     
-    const index = ORDERED_CATEGORIES.findIndex(cat => lowerName.includes(cat));
-    return index !== -1 ? index : 999;
-  };
+    // If a match is found, override its name for display
+    if (match) {
+      return { ...match, name: config.displayName };
+    }
+    
+    return null;
+  }).filter(Boolean); // Remove any that weren't found
 
-  const filteredTreatments = uniqueTreatments
-    .filter(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
+  // Filter based on search term
+  const filteredTreatments = mappedTreatments
+    .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   useEffect(() => {
     window.scrollTo(0, 0);
