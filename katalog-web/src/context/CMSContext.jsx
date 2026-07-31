@@ -171,25 +171,61 @@ export const CMSProvider = ({ children }) => {
       ];
 
       disc45Names.forEach(name => {
-        const foundIndex = treatmentsData.findIndex(t => t.name?.trim().toUpperCase() === name);
+        const id = `default_disc45_${name.replace(/\s+/g, '_')}`;
+        const existing = treatmentsData.find(t => t.id === id || (t.name?.trim().toUpperCase() === name && t.discount === 45));
         const pdfLink = `${import.meta.env.BASE_URL}assets/perawatan/${name}.pdf`;
-        if (foundIndex !== -1) {
-          treatmentsData[foundIndex] = {
-            ...treatmentsData[foundIndex],
-            discount: 45,
-            startDate: '',
-            endDate: '',
-            pdfLink: treatmentsData[foundIndex].pdfLink && treatmentsData[foundIndex].pdfLink !== '#' ? treatmentsData[foundIndex].pdfLink : pdfLink
-          };
+        const image = `${import.meta.env.BASE_URL}assets/images_enif/${name}.png`;
+        if (existing) {
+          existing.discount = 45;
+          existing.startDate = '';
+          existing.endDate = '';
+          if (!existing.image) existing.image = image;
+          if (!existing.pdfLink || existing.pdfLink === '#') existing.pdfLink = pdfLink;
         } else {
           treatmentsData.push({
-            id: `default_disc45_${name.replace(/\s+/g, '_')}`,
+            id: id,
             name: name,
             discount: 45,
             price: '',
             startDate: '',
             endDate: '',
             pdfLink: pdfLink,
+            image: image,
+            createdAt: Date.now()
+          });
+        }
+      });
+
+      // Ensure all 5 promo 50% treatments are active and present
+      const disc50Names = [
+        'ACNE TREATMENT',
+        'GLOWING TREATMENT',
+        'MELASMA FLEK TREATMENT',
+        'SCAR TREATMENT',
+        'WHITENING TREATMENT'
+      ];
+
+      disc50Names.forEach(name => {
+        const id = `default_disc50_${name.replace(/\s+/g, '_')}`;
+        const existing = treatmentsData.find(t => t.id === id || (t.name?.trim().toUpperCase() === name && t.discount === 50));
+        const pdfLink = `${import.meta.env.BASE_URL}assets/perawatan/${name}.pdf`;
+        const image = `${import.meta.env.BASE_URL}assets/images_enif/${name}.png`;
+        if (existing) {
+          existing.discount = 50;
+          existing.startDate = '';
+          existing.endDate = '';
+          if (!existing.image) existing.image = image;
+          if (!existing.pdfLink || existing.pdfLink === '#') existing.pdfLink = pdfLink;
+        } else {
+          treatmentsData.push({
+            id: id,
+            name: name,
+            discount: 50,
+            price: '',
+            startDate: '',
+            endDate: '',
+            pdfLink: pdfLink,
+            image: image,
             createdAt: Date.now()
           });
         }
