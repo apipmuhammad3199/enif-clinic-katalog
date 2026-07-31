@@ -317,22 +317,23 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif;
 }
 
-/* Promo Slider (Crossfade) */
+/* Promo Slider */
 .promo-slider {
-  display: grid;
-  width: 100%;
-  overflow: hidden;
-  background-color: #f9f9f9;
-}
-
-.slide {
-  grid-area: 1 / 1;
-  width: 100%;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  overflow: hidden;
+  background-color: #fafafa;
+  padding: 1.5rem 1rem;
+}
+
+.slide {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.4s ease-in-out;
 }
 
 .slide.active {
@@ -340,11 +341,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .slide img {
-  width: 100%;
+  width: auto;
+  max-width: 550px;
+  max-height: 75vh;
   height: auto;
-  max-height: 70vh;
   object-fit: contain;
   display: block;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 
 

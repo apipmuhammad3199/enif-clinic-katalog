@@ -45,8 +45,126 @@ const calculateDiscountedPrice = (priceStr, discountPercent) => {
 // treat them as no link at all so the fallback chain below kicks in instead.
 const isUsablePdfLink = (link) => Boolean(link) && link !== '#' && !link.startsWith('blob:');
 
+const TREATMENT_ASSETS_MAP = {
+  'acne treatment': {
+    pdf: 'assets/perawatan/ACNE TREATMENT.pdf',
+    image: 'assets/images_enif/ACNE TREATMENT.png'
+  },
+  'body contour': {
+    pdf: 'assets/perawatan/BODY CONTOUR.pdf',
+    image: 'assets/images_enif/PAKET BODY CONTOUR.png'
+  },
+  'paket body contour': {
+    pdf: 'assets/perawatan/PAKET BODY CONTOUR.pdf',
+    image: 'assets/images_enif/PAKET BODY CONTOUR.png'
+  },
+  'body treatment': {
+    pdf: 'assets/perawatan/BODY TREATMENT2.pdf',
+    image: 'assets/perawatan/image/BODY TREATMENT2.png'
+  },
+  'botox treatment': {
+    pdf: 'assets/perawatan/BOTOX TREATMENT.pdf',
+    image: 'assets/images_enif/BOTOX TREATMENT.png'
+  },
+  'cauter': {
+    pdf: 'assets/perawatan/CAUTER.pdf',
+    image: 'assets/images_enif/CAUTER.png'
+  },
+  'face contour treatment': {
+    pdf: 'assets/perawatan/FACE CONTOUR TREATMENT.pdf',
+    image: 'assets/perawatan/image/FACE CONTOUR TREATMENT.png'
+  },
+  'facial treatment': {
+    pdf: 'assets/perawatan/FACIAL TREATMENT.pdf',
+    image: 'assets/images_enif/FACIAL TREATMENT.png'
+  },
+  'filler': {
+    pdf: 'assets/perawatan/FILLER.pdf',
+    image: 'assets/images_enif/FILLER.png'
+  },
+  'glowing treatment': {
+    pdf: 'assets/perawatan/GLOWING TREATMENT.pdf',
+    image: 'assets/images_enif/GLOWING TREATMENT.png'
+  },
+  'hair removal treatment': {
+    pdf: 'assets/perawatan/HAIR REMOVEL TRATMENT.pdf',
+    image: 'assets/images_enif/HAIR REMOVEL TRATMENT.png'
+  },
+  'hair removel tratment': {
+    pdf: 'assets/perawatan/HAIR REMOVEL TRATMENT.pdf',
+    image: 'assets/images_enif/HAIR REMOVEL TRATMENT.png'
+  },
+  'injection treatment': {
+    pdf: 'assets/perawatan/INJECTION TREATMENT.pdf',
+    image: 'assets/images_enif/INJECTION TREATMENT.png'
+  },
+  'laser treatment': {
+    pdf: 'assets/perawatan/LASER TREATMENT.pdf',
+    image: 'assets/images_enif/LASER TREATMENT.png'
+  },
+  'lhala peel treatment': {
+    pdf: 'assets/perawatan/LHALA PEEL TREATMENT.pdf',
+    image: 'assets/images_enif/LHALA PEEL TREATMENT.png'
+  },
+  'luxury skinbooster': {
+    pdf: 'assets/perawatan/LUXURY SKINBOOSTER.pdf',
+    image: 'assets/images_enif/LUXURY SKINBOOSTER.png'
+  },
+  'massage badan': {
+    pdf: 'assets/perawatan/MASSAGE BADAN.pdf',
+    image: 'assets/images_enif/MASSAGE BADAN.png'
+  },
+  'melasma flex treatment': {
+    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
+    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
+  },
+  'melasma flek treatment': {
+    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
+    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
+  },
+  'melasma / flex treatment': {
+    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
+    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
+  },
+  'mesolipo': {
+    pdf: 'assets/perawatan/MESOLIPO.pdf',
+    image: 'assets/images_enif/MESOLIPO.png'
+  },
+  'peeling': {
+    pdf: 'assets/perawatan/PEELING.pdf',
+    image: 'assets/images_enif/PEELING.png'
+  },
+  'radio frequency': {
+    pdf: 'assets/perawatan/RADIO FREQUENCY.pdf',
+    image: 'assets/images_enif/RADIO FREQUENCY.png'
+  },
+  'scar treatment': {
+    pdf: 'assets/perawatan/SCAR TREATMENT.pdf',
+    image: 'assets/images_enif/SCAR TREATMENT.png'
+  },
+  'subsisi': {
+    pdf: 'assets/perawatan/SUBSISI.pdf',
+    image: 'assets/images_enif/SUBSISI.png'
+  },
+  'threadlift': {
+    pdf: 'assets/perawatan/THREADLIFT..pdf',
+    image: 'assets/images_enif/THREADLIFT..png'
+  },
+  'tunggal treatment': {
+    pdf: 'assets/perawatan/TUNGGAL TREATMENT.pdf',
+    image: 'assets/images_enif/TUNGGAL TREATMENT.png'
+  },
+  'whitening treatment': {
+    pdf: 'assets/perawatan/WHITENING TREATMENT.pdf',
+    image: 'assets/images_enif/WHITENING TREATMENT.png'
+  }
+};
+
 const TreatmentCard = ({ treatment, isProduct = false }) => {
   const { perawatanPDFs } = useContext(CMSContext);
+
+  const cleanKey = (treatment.name || '').toLowerCase().trim();
+  const mapped = TREATMENT_ASSETS_MAP[cleanKey];
 
   // Try to find a matching PDF from the CMS if it doesn't already have one
   const matchedPdf = perawatanPDFs?.find(p => p.name?.trim().toLowerCase() === treatment.name?.trim().toLowerCase());
@@ -55,15 +173,10 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
   const localMatch = localPdfs.find(filename => {
     const cleanFile = filename.replace(/\.+pdf$/i, '').trim();
     const cleanName = treatment.name?.trim() || '';
-    return isSameTreatmentName(cleanFile, cleanName) || cleanFile.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(cleanFile.toLowerCase());
+    return isSameTreatmentName(cleanFile, cleanName);
   });
 
-  const preferredPdfLink = (treatment.name || '').toLowerCase().includes('body treatment')
-    ? `${import.meta.env.BASE_URL}assets/perawatan/BODY%20TREATMENT2.pdf`
-    : null;
-
-  const finalPdfLink = preferredPdfLink
-    || (isUsablePdfLink(treatment.pdfLink) ? treatment.pdfLink : null)
+  const finalPdfLink = (isUsablePdfLink(treatment.pdfLink) ? treatment.pdfLink : null)
     || (isUsablePdfLink(matchedPdf?.pdfLink) ? matchedPdf.pdfLink : null);
   
   const activeDiscount = treatment.effectiveDiscount !== undefined ? treatment.effectiveDiscount : treatment.discount;
@@ -73,11 +186,14 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
     : null;
 
   const pdfUrl = promoPdfUrl
+    || (mapped ? `${import.meta.env.BASE_URL}${mapped.pdf}` : null)
     || finalPdfLink 
     || (localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/${localMatch}` : null)
     || (treatment.filename ? `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}` : null);
 
-  const fallbackImage = localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/image/${localMatch.replace(/\.+pdf$/i, '.png')}` : null;
+  const fallbackImage = mapped 
+    ? `${import.meta.env.BASE_URL}${mapped.image}`
+    : (localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/image/${localMatch.replace(/\.+pdf$/i, '.png')}` : null);
   
   const displayImage = treatment.image 
     ? (treatment.image.startsWith('data:') || treatment.image.startsWith('http') ? treatment.image : `${import.meta.env.BASE_URL}${treatment.image.startsWith('/') ? treatment.image.substring(1) : treatment.image}`) 

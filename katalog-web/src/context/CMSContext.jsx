@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import defaultTreatments from '../data.json';
 import { articles as defaultArticles } from '../data/articles';
@@ -75,18 +75,21 @@ export const CMSProvider = ({ children }) => {
           const skincareSnap = await getDocs(collection(db, 'skincare_products'));
           if (skincareSnap.empty) {
             const defaultSkincare = [
-              { name: 'Body Whitening', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare1.jpeg`, price: '83000', description: 'Body Whitening SPF 20 Strawberry.' },
-              { name: 'Facial Wash', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare2.jpeg`, price: '83000', description: 'Bye Acne Facial Wash.' },
-              { name: 'Toner', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare3.jpeg`, price: '83000', description: 'Bye Acne Toner.' },
-              { name: 'Gentle Cleanser', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare4.jpeg`, price: '53000', description: 'Cera Niacin Gentle Cleanser.' },
-              { name: 'Night Cream', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare5.jpeg`, price: '83000', description: 'Dreamy Glow HyaluMoist.' },
+              { name: 'Cleanser / Facial Wash', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare1.jpeg`, price: '58000', description: 'Cleanser & Facial Wash pembersih minyak, kotoran & sisa make up.' },
+              { name: 'Moisturizer', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare2.jpeg`, price: '83000', description: 'Moisturizer melembapkan kulit wajah & menjaga hidrasi.' },
+              { name: 'Sunscreen', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare3.jpeg`, price: '83000', description: 'Sunscreen melindungi kulit dari sinar UVB & UVA SPF 30/50.' },
+              { name: 'Serum', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare4.jpeg`, price: '53000', description: 'Serum pilihan sesuai dengan kebutuhan kulit.' },
+              { name: 'Night Cream', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare5.jpeg`, price: '83000', description: 'Night cream/krim malam sesuai dengan kebutuhan kulitmu.' },
             ];
             for (const s of defaultSkincare) await addDoc(collection(db, 'skincare_products'), { ...s, createdAt: now });
           }
 
           const treatmentsSnap = await getDocs(collection(db, 'treatments'));
           if (treatmentsSnap.empty && defaultTreatments) {
-            for (const t of defaultTreatments) await addDoc(collection(db, 'treatments'), { ...t, createdAt: now });
+            for (const t of defaultTreatments) {
+              const { image, ...cleanT } = t;
+              await addDoc(collection(db, 'treatments'), { ...cleanT, createdAt: now });
+            }
           }
           
           const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
@@ -138,65 +141,7 @@ export const CMSProvider = ({ children }) => {
     };
 
     seedDatabase();
-    
-    // ONE-TIME FORCE SYNC IMAGES
-    const forceSyncImages = async () => {
-      try {
-        if (!defaultTreatments) return;
-        
-        // Sync treatments
-        const treatmentsSnap = await getDocs(collection(db, 'treatments'));
-        for (const docSnap of treatmentsSnap.docs) {
-          const data = docSnap.data();
-          if (!data.image) {
-            const defaultT = defaultTreatments.find(dt => dt.name && data.name && dt.name.toLowerCase() === data.name.toLowerCase());
-            if (defaultT && defaultT.image) {
-              await setDoc(doc(db, 'treatments', docSnap.id), { image: defaultT.image }, { merge: true });
-            }
-          }
-        }
-        
-        // Sync perawatan_pdfs
-        const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
-        for (const docSnap of pdfsSnap.docs) {
-          const data = docSnap.data();
-          if (!data.image) {
-            const defaultT = defaultTreatments.find(dt => dt.name && data.name && dt.name.toLowerCase() === data.name.toLowerCase());
-            if (defaultT && defaultT.image) {
-              await setDoc(doc(db, 'perawatan_pdfs', docSnap.id), { image: defaultT.image }, { merge: true });
-            }
-          }
-        }
-        console.log("Force sync images complete!");
-      } catch (err) {
-        console.error("Error during force sync:", err);
-      }
-    };
-    forceSyncImages();
-
-    // ONE-TIME FORCE RE-SEED TREATMENTS V3
-    const forceReseedTreatmentsV3 = async () => {
-      try {
-        const seedFlag = localStorage.getItem('hasReseededTreatmentsV3');
-        if (seedFlag || !defaultTreatments) return;
-        
-        console.log("Wiping and re-seeding treatments...");
-        const treatmentsSnap = await getDocs(collection(db, 'treatments'));
-        for (const docSnap of treatmentsSnap.docs) {
-          await deleteDoc(doc(db, 'treatments', docSnap.id));
-        }
-        
-        for (const t of defaultTreatments) {
-          await addDoc(collection(db, 'treatments'), { ...t, createdAt: Date.now() });
-        }
-        
-        localStorage.setItem('hasReseededTreatmentsV3', 'true');
-        console.log("Re-seed complete!");
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    forceReseedTreatmentsV3();
+    cleanFirestoreImagesAndDuplicates();
 
     // Listen to treatments
     const unsubTreatments = onSnapshot(collection(db, 'treatments'), (snapshot) => {
@@ -221,10 +166,15 @@ export const CMSProvider = ({ children }) => {
     });
 
     // Listen to promos
-    const unsubPromos = onSnapshot(collection(db, 'promos'), (snapshot) => {
-      const promosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      promosData.sort((a, b) => b.createdAt - a.createdAt);
-      setPromos(promosData);
+    const unsubPromos = onSnapshot(collection(db, 'promos'), () => {
+      const DEFAULT_SLIDES = [
+        { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.jpg` },
+        { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.jpg` },
+        { id: 'default3', url: `${import.meta.env.BASE_URL}assets/Slide3.jpg` },
+        { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.jpeg` },
+        { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.jpeg` },
+      ];
+      setPromos(DEFAULT_SLIDES);
     });
 
     // Listen to videos
@@ -241,10 +191,15 @@ export const CMSProvider = ({ children }) => {
       }
     });
 
-    const unsubSkincare = onSnapshot(collection(db, 'skincare_products'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt - a.createdAt);
-      setSkincareProducts(data);
+    const unsubSkincare = onSnapshot(collection(db, 'skincare_products'), () => {
+      const DEFAULT_SKINCARE = [
+        { id: 'default_sk1', name: 'Cleanser / Facial Wash', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare1.jpeg`, price: '58000', description: 'Cleanser & Facial Wash pembersih minyak, kotoran & sisa make up.' },
+        { id: 'default_sk2', name: 'Moisturizer', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare2.jpeg`, price: '83000', description: 'Moisturizer melembapkan kulit wajah & menjaga hidrasi.' },
+        { id: 'default_sk3', name: 'Sunscreen', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare3.jpeg`, price: '83000', description: 'Sunscreen melindungi kulit dari sinar UVB & UVA SPF 30/50.' },
+        { id: 'default_sk4', name: 'Serum', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare4.jpeg`, price: '53000', description: 'Serum pilihan sesuai dengan kebutuhan kulit.' },
+        { id: 'default_sk5', name: 'Night Cream', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare5.jpeg`, price: '83000', description: 'Night cream/krim malam sesuai dengan kebutuhan kulitmu.' },
+      ];
+      setSkincareProducts(DEFAULT_SKINCARE);
     });
 
     const unsubPerawatan = onSnapshot(collection(db, 'perawatan_pdfs'), (snapshot) => {
@@ -302,6 +257,54 @@ export const CMSProvider = ({ children }) => {
       unsubArticles();
     };
   }, []);
+
+  const cleanFirestoreImagesAndDuplicates = async () => {
+    try {
+      console.log("Cleaning up Firestore images and duplicates...");
+
+      const treatmentsSnap = await getDocs(collection(db, 'treatments'));
+      for (const docSnap of treatmentsSnap.docs) {
+        const data = docSnap.data();
+        if (data.image) {
+          await updateDoc(doc(db, 'treatments', docSnap.id), { image: deleteField() });
+        }
+      }
+
+      const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
+      for (const docSnap of pdfsSnap.docs) {
+        const data = docSnap.data();
+        if (data.image) {
+          await updateDoc(doc(db, 'perawatan_pdfs', docSnap.id), { image: deleteField() });
+        }
+      }
+
+      const seenTreatments = new Set();
+      for (const docSnap of treatmentsSnap.docs) {
+        const nameKey = docSnap.data().name?.trim().toLowerCase();
+        if (!nameKey) continue;
+        if (seenTreatments.has(nameKey)) {
+          await deleteDoc(doc(db, 'treatments', docSnap.id));
+        } else {
+          seenTreatments.add(nameKey);
+        }
+      }
+
+      const seenPdfs = new Set();
+      for (const docSnap of pdfsSnap.docs) {
+        const nameKey = docSnap.data().name?.trim().toLowerCase();
+        if (!nameKey) continue;
+        if (seenPdfs.has(nameKey)) {
+          await deleteDoc(doc(db, 'perawatan_pdfs', docSnap.id));
+        } else {
+          seenPdfs.add(nameKey);
+        }
+      }
+
+      console.log("Firestore cleanup complete!");
+    } catch (err) {
+      console.error("Error during Firestore cleanup:", err);
+    }
+  };
 
   const addTestimonial = async (data) => {
     try {
@@ -467,6 +470,7 @@ export const CMSProvider = ({ children }) => {
       users, addUser, removeUser,
       testimonials, addTestimonial, updateTestimonial, removeTestimonial,
       articles, addArticle, updateArticle, removeArticle,
+      cleanFirestoreImagesAndDuplicates,
       loading
     }}>
       {children}

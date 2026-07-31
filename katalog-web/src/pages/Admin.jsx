@@ -68,7 +68,8 @@ function Admin() {
     beforeAfterImages, addBeforeAfter, updateBeforeAfter, removeBeforeAfter,
     users, addUser, removeUser,
     testimonials, addTestimonial, updateTestimonial, removeTestimonial,
-    articles, addArticle, updateArticle, removeArticle
+    articles, addArticle, updateArticle, removeArticle,
+    cleanFirestoreImagesAndDuplicates
   } = useContext(CMSContext);
 
   const [activeTab, setActiveTab] = useState('promo');
@@ -700,6 +701,9 @@ function Admin() {
         <header className="admin-header">
           <h1>Dashboard Overview</h1>
           <div>
+            <button className="admin-btn admin-btn-outline" onClick={async () => { await cleanFirestoreImagesAndDuplicates(); showNotification('Berhasil membersihkan foto & data duplikat dari database!'); }} style={{ marginRight: '1rem' }}>
+              Bersihkan Foto DB
+            </button>
             <button className="admin-btn admin-btn-outline" onClick={() => navigate('/')} style={{ marginRight: '1rem' }}>
               Lihat Website
             </button>
