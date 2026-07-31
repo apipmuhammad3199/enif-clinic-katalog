@@ -161,6 +161,40 @@ export const CMSProvider = ({ children }) => {
         });
       }
       
+      // Ensure all 5 promo 45% treatments are active and present
+      const disc45Names = [
+        'ACNE TREATMENT',
+        'GLOWING TREATMENT',
+        'MELASMA FLEK TREATMENT',
+        'SCAR TREATMENT',
+        'WHITENING TREATMENT'
+      ];
+
+      disc45Names.forEach(name => {
+        const foundIndex = treatmentsData.findIndex(t => t.name?.trim().toUpperCase() === name);
+        const pdfLink = `${import.meta.env.BASE_URL}assets/perawatan/${name}.pdf`;
+        if (foundIndex !== -1) {
+          treatmentsData[foundIndex] = {
+            ...treatmentsData[foundIndex],
+            discount: 45,
+            startDate: '',
+            endDate: '',
+            pdfLink: treatmentsData[foundIndex].pdfLink && treatmentsData[foundIndex].pdfLink !== '#' ? treatmentsData[foundIndex].pdfLink : pdfLink
+          };
+        } else {
+          treatmentsData.push({
+            id: `default_disc45_${name.replace(/\s+/g, '_')}`,
+            name: name,
+            discount: 45,
+            price: '',
+            startDate: '',
+            endDate: '',
+            pdfLink: pdfLink,
+            createdAt: Date.now()
+          });
+        }
+      });
+
       treatmentsData.sort((a, b) => b.createdAt - a.createdAt);
       setTreatments(treatmentsData);
     });
