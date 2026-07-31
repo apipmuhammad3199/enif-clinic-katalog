@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { CMSContext } from '../context/CMSContext';
+import { sanitizePromos } from '../utils/safeguards';
 
 const PromoSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { promos: slides } = useContext(CMSContext);
+  const { promos: rawSlides } = useContext(CMSContext);
+  const slides = sanitizePromos(rawSlides);
 
   useEffect(() => {
     if (!slides || slides.length === 0) return;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
 import { storage } from '../firebase';
 import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { validateImageFile } from '../utils/safeguards';
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -159,6 +160,14 @@ function Admin() {
       showNotification('Tidak ada perubahan gambar.');
       setEditingPromoId(null);
       return;
+    }
+
+    if (promoFile) {
+      const check = validateImageFile(promoFile, 3);
+      if (!check.valid) {
+        showNotification(check.message);
+        return;
+      }
     }
 
     setUploadingPromo(true);

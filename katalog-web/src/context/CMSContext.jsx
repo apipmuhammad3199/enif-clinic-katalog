@@ -3,6 +3,7 @@ import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs
 import { db } from '../firebase';
 import defaultTreatments from '../data.json';
 import { articles as defaultArticles } from '../data/articles';
+import { sanitizePromos, sanitizeSkincare, sanitizeTreatments } from '../utils/safeguards';
 
 export const CMSContext = createContext();
 
@@ -232,7 +233,7 @@ export const CMSProvider = ({ children }) => {
       });
 
       treatmentsData.sort((a, b) => b.createdAt - a.createdAt);
-      setTreatments(treatmentsData);
+      setTreatments(sanitizeTreatments(treatmentsData));
     });
 
     // Listen to promos
@@ -244,7 +245,7 @@ export const CMSProvider = ({ children }) => {
         { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.jpeg` },
         { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.jpeg` },
       ];
-      setPromos(DEFAULT_SLIDES);
+      setPromos(sanitizePromos(DEFAULT_SLIDES));
     });
 
     // Listen to videos
@@ -269,7 +270,7 @@ export const CMSProvider = ({ children }) => {
         { id: 'default_sk4', name: 'Serum', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare4.jpeg`, price: '53000', description: 'Serum pilihan sesuai dengan kebutuhan kulit.' },
         { id: 'default_sk5', name: 'Night Cream', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare5.jpeg`, price: '83000', description: 'Night cream/krim malam sesuai dengan kebutuhan kulitmu.' },
       ];
-      setSkincareProducts(DEFAULT_SKINCARE);
+      setSkincareProducts(sanitizeSkincare(DEFAULT_SKINCARE));
     });
 
     const unsubPerawatan = onSnapshot(collection(db, 'perawatan_pdfs'), (snapshot) => {
