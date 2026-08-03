@@ -1,6 +1,5 @@
 import React, { useContext, useEffect } from 'react';
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
 import TreatmentCard from '../components/TreatmentCard';
 import Footer from '../components/Footer';
 import FloatingWhatsApp from '../components/FloatingWhatsApp';
@@ -12,6 +11,11 @@ import { sortTreatments } from '../utils/sortTreatments';
 
 function Promo45() {
   const { treatments } = useContext(CMSContext);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    AOS.init({ duration: 800, once: true, easing: 'ease-out-cubic' });
+  }, []);
 
   const isPromoActive = (startDate, endDate) => {
     if (!startDate || !endDate) return true;

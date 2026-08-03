@@ -1,6 +1,5 @@
 import React, { useContext, useEffect } from 'react';
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
 import TreatmentCard from '../components/TreatmentCard';
 import Footer from '../components/Footer';
 import FloatingWhatsApp from '../components/FloatingWhatsApp';

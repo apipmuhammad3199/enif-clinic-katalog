@@ -40,15 +40,7 @@ function Articles() {
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
           {articles.map((article, idx) => (
-            <div key={idx} style={{ 
-              display: 'flex', 
-              flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-              gap: '2rem', 
-              backgroundColor: '#fff',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.03)'
-            }} data-aos="fade-up" data-aos-delay={idx * 50}>
+            <div key={idx} className="article-card-row" data-aos="fade-up" data-aos-delay={idx * 50}>
               <div style={{ flex: '1', minWidth: '300px', height: '220px', borderRadius: '8px', overflow: 'hidden' }}>
                 <img src={article.image && article.image.startsWith('/') ? `${import.meta.env.BASE_URL}${article.image.substring(1)}` : article.image} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
@@ -56,7 +48,7 @@ function Articles() {
                 <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: '500' }}>{article.date}</div>
                 <h3 style={{ fontSize: '1.5rem', color: 'var(--text-dark)', marginBottom: '1rem', lineHeight: '1.4' }}>{article.title}</h3>
                 <p style={{ color: 'var(--text-light)', marginBottom: '1.5rem', lineHeight: '1.6' }}>{article.summary}</p>
-                <Link to="#" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>Baca Selengkapnya &rarr;</Link>
+                <Link to="/" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>Kembali ke Beranda &rarr;</Link>
               </div>
             </div>
           ))}
@@ -70,6 +62,3 @@ function Articles() {
 }
 
 export default Articles;
-
-
-

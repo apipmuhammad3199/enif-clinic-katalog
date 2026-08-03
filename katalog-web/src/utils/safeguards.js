@@ -71,8 +71,6 @@ export const sanitizePromos = (promos) => {
       seenUrls.add(normalizedUrl);
       cleanPromos.push(typeof item === 'string' ? { id: `promo_${cleanPromos.length}`, url } : item);
     }
-
-    if (cleanPromos.length >= 5) break; // Maximum 5 slides guard
   }
 
   return cleanPromos.length > 0 ? cleanPromos : DEFAULT_SLIDES;
@@ -101,8 +99,6 @@ export const sanitizeSkincare = (products) => {
         description: sanitizeText(prod.description || '')
       });
     }
-
-    if (cleanProducts.length >= 5) break;
   }
 
   return cleanProducts.length > 0 ? cleanProducts : DEFAULT_SKINCARE;

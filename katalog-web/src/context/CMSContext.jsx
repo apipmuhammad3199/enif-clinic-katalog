@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import defaultTreatments from '../data.json';
 import { articles as defaultArticles } from '../data/articles';
@@ -88,7 +88,8 @@ export const CMSProvider = ({ children }) => {
           const treatmentsSnap = await getDocs(collection(db, 'treatments'));
           if (treatmentsSnap.empty && defaultTreatments) {
             for (const t of defaultTreatments) {
-              const { image, ...cleanT } = t;
+              const cleanT = { ...t };
+              delete cleanT.image;
               await addDoc(collection(db, 'treatments'), { ...cleanT, createdAt: now });
             }
           }
@@ -237,7 +238,7 @@ export const CMSProvider = ({ children }) => {
     });
 
     // Listen to promos
-    const unsubPromos = onSnapshot(collection(db, 'promos'), () => {
+    const unsubPromos = onSnapshot(collection(db, 'promos'), (snapshot) => {
       const DEFAULT_SLIDES = [
         { id: 'default1', url: `${import.meta.env.BASE_URL}assets/Slide1.jpg` },
         { id: 'default2', url: `${import.meta.env.BASE_URL}assets/Slide2.jpg` },
@@ -245,7 +246,13 @@ export const CMSProvider = ({ children }) => {
         { id: 'default4', url: `${import.meta.env.BASE_URL}assets/Slide4.jpeg` },
         { id: 'default5', url: `${import.meta.env.BASE_URL}assets/Slide5.jpeg` },
       ];
-      setPromos(sanitizePromos(DEFAULT_SLIDES));
+      const firestoreData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      firestoreData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      if (firestoreData.length > 0) {
+        setPromos(sanitizePromos(firestoreData));
+      } else {
+        setPromos(sanitizePromos(DEFAULT_SLIDES));
+      }
     });
 
     // Listen to videos
@@ -262,7 +269,7 @@ export const CMSProvider = ({ children }) => {
       }
     });
 
-    const unsubSkincare = onSnapshot(collection(db, 'skincare_products'), () => {
+    const unsubSkincare = onSnapshot(collection(db, 'skincare_products'), (snapshot) => {
       const DEFAULT_SKINCARE = [
         { id: 'default_sk1', name: 'Cleanser / Facial Wash', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare1.jpeg`, price: '58000', description: 'Cleanser & Facial Wash pembersih minyak, kotoran & sisa make up.' },
         { id: 'default_sk2', name: 'Moisturizer', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare2.jpeg`, price: '83000', description: 'Moisturizer melembapkan kulit wajah & menjaga hidrasi.' },
@@ -270,7 +277,13 @@ export const CMSProvider = ({ children }) => {
         { id: 'default_sk4', name: 'Serum', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare4.jpeg`, price: '53000', description: 'Serum pilihan sesuai dengan kebutuhan kulit.' },
         { id: 'default_sk5', name: 'Night Cream', image: `${import.meta.env.BASE_URL}assets/product_skincare/skincare5.jpeg`, price: '83000', description: 'Night cream/krim malam sesuai dengan kebutuhan kulitmu.' },
       ];
-      setSkincareProducts(sanitizeSkincare(DEFAULT_SKINCARE));
+      const firestoreData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      firestoreData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      if (firestoreData.length > 0) {
+        setSkincareProducts(sanitizeSkincare(firestoreData));
+      } else {
+        setSkincareProducts(sanitizeSkincare(DEFAULT_SKINCARE));
+      }
     });
 
     const unsubPerawatan = onSnapshot(collection(db, 'perawatan_pdfs'), (snapshot) => {
@@ -331,24 +344,9 @@ export const CMSProvider = ({ children }) => {
 
   const cleanFirestoreImagesAndDuplicates = async () => {
     try {
-      console.log("Cleaning up Firestore images and duplicates...");
+      console.log("Cleaning up Firestore duplicate items...");
 
       const treatmentsSnap = await getDocs(collection(db, 'treatments'));
-      for (const docSnap of treatmentsSnap.docs) {
-        const data = docSnap.data();
-        if (data.image) {
-          await updateDoc(doc(db, 'treatments', docSnap.id), { image: deleteField() });
-        }
-      }
-
-      const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
-      for (const docSnap of pdfsSnap.docs) {
-        const data = docSnap.data();
-        if (data.image) {
-          await updateDoc(doc(db, 'perawatan_pdfs', docSnap.id), { image: deleteField() });
-        }
-      }
-
       const seenTreatments = new Set();
       for (const docSnap of treatmentsSnap.docs) {
         const nameKey = docSnap.data().name?.trim().toLowerCase();
@@ -360,6 +358,7 @@ export const CMSProvider = ({ children }) => {
         }
       }
 
+      const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
       const seenPdfs = new Set();
       for (const docSnap of pdfsSnap.docs) {
         const nameKey = docSnap.data().name?.trim().toLowerCase();

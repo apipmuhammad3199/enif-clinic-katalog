@@ -14,7 +14,7 @@ const PromoSlider = () => {
     }, 3500);
 
     return () => clearInterval(timer);
-  }, [slides ? slides.length : 0]);
+  }, [slides.length]);
 
   if (!slides || slides.length === 0) return null;
 

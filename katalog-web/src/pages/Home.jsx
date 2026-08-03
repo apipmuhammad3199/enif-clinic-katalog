@@ -12,8 +12,7 @@ import Header from '../components/Header';
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const { treatments, promos, videos, promoSettings, skincareProducts, testimonials, articles } = useContext(CMSContext);
+  const { treatments, videos, skincareProducts, testimonials, articles } = useContext(CMSContext);
   const marqueeRef = useRef(null);
   const testiMarqueeRef = useRef(null);
   const contactDropdownRef = useRef(null);
@@ -65,12 +64,6 @@ function Home() {
     setTimeout(() => AOS.refresh(), 500);
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
-  };
-
   const isPromoActive = (startDate, endDate) => {
     if (!startDate || !endDate) return true;
     
@@ -93,10 +86,6 @@ function Home() {
     }
     return { ...treatment, effectiveDiscount };
   });
-
-  const treatments55 = processedTreatments.filter(t => t.effectiveDiscount === 55 && t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const treatments50 = processedTreatments.filter(t => t.effectiveDiscount === 50 && t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const treatments45 = processedTreatments.filter(t => t.effectiveDiscount === 45 && t.name.toLowerCase().includes(searchTerm.toLowerCase()));
   
   // Logika Semua Layanan: 
   // Jika sedang mencari (searchTerm tidak kosong), tampilkan semuanya.
@@ -115,14 +104,6 @@ function Home() {
   const marqueeProducts = [...(skincareProducts || []), ...(skincareProducts || [])];
 
   const marqueeTestimonials = [...(testimonials || []), ...(testimonials || [])];
-
-  const preview55 = treatments55.slice(0, 4);
-  const preview50 = treatments50.slice(0, 4);
-  const preview45 = treatments45.slice(0, 4);
-
-  const hasActive55 = processedTreatments.some(t => t.effectiveDiscount === 55);
-  const hasActive50 = processedTreatments.some(t => t.effectiveDiscount === 50);
-  const hasActive45 = processedTreatments.some(t => t.effectiveDiscount === 45);
 
   return (
     <div className="app-container">
@@ -347,7 +328,7 @@ function Home() {
             <h2 className="section-title-grey" style={{ textTransform: 'uppercase' }}>SELALU DAPATKAN UPDATE INSIGHT KECANTIKAN</h2>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', gap: '2rem' }}>
+          <div className="articles-layout-row">
             {/* Featured Article (Left) */}
             {articles.length > 0 && (
               <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '1rem' }} data-aos="fade-right">

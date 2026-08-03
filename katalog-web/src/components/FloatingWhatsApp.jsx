@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 
 const waLink = "https://api.whatsapp.com/send?phone=628214464406&text=Hai%2C%20Kak%20%F0%9F%A5%B0%0ASelamat%20Datang%20di%20Layanan%20Booking%20Online%20Enef%20Clinic%20%F0%9F%A4%8E%0A%0AKami%20informasikan%2C%20slot%20booking%20dibuka%20mulai%20jam%2011.00-17.00%0ABooking%20maksimal%20H-1%20sebelum%20kedatangan%20%F0%9F%A5%B0%0A%0ATerima%20kasih%20%F0%9F%A5%B0%0ASalam%20hangat%0AEnef%20Clinic%0A%0APesan%20ini%20dikirim%20otomatis%20oleh%20sistem";
 

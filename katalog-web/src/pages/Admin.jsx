@@ -51,7 +51,7 @@ const compressImageToBase64 = async (file, maxWidth = 800) => {
         const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
         resolve(dataUrl);
       };
-      img.onerror = (err) => resolve(event.target.result); // Fallback to uncompressed Base64
+      img.onerror = () => resolve(event.target.result); // Fallback to uncompressed Base64
     };
     reader.onerror = (err) => reject(err);
   });
@@ -63,9 +63,7 @@ function Admin() {
     treatments, addTreatment, updateTreatment, removeTreatment,
     promos, addPromo, updatePromo, removePromo,
     videos, addVideo, updateVideo, removeVideo,
-    promoSettings, updatePromoSettings,
     skincareProducts, addSkincare, updateSkincare, removeSkincare,
-    perawatanPDFs, addPerawatanPDF, updatePerawatanPDF, removePerawatanPDF,
     beforeAfterImages, addBeforeAfter, updateBeforeAfter, removeBeforeAfter,
     users, addUser, removeUser,
     testimonials, addTestimonial, updateTestimonial, removeTestimonial,
@@ -88,7 +86,7 @@ function Admin() {
   };
 
   useEffect(() => {
-    const isAuth = localStorage.getItem('cms_auth');
+    const isAuth = localStorage.getItem('cms_auth') === 'true';
     if (!isAuth) {
       navigate('/login');
     }
@@ -710,8 +708,8 @@ function Admin() {
         <header className="admin-header">
           <h1>Dashboard Overview</h1>
           <div>
-            <button className="admin-btn admin-btn-outline" onClick={async () => { await cleanFirestoreImagesAndDuplicates(); showNotification('Berhasil membersihkan foto & data duplikat dari database!'); }} style={{ marginRight: '1rem' }}>
-              Bersihkan Foto DB
+            <button className="admin-btn admin-btn-outline" onClick={async () => { await cleanFirestoreImagesAndDuplicates(); showNotification('Berhasil membersihkan data duplikat dari database!'); }} style={{ marginRight: '1rem' }}>
+              Bersihkan Duplikat DB
             </button>
             <button className="admin-btn admin-btn-outline" onClick={() => navigate('/')} style={{ marginRight: '1rem' }}>
               Lihat Website

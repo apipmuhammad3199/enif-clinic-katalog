@@ -19,7 +19,7 @@ try {
   
   try {
     execSync('git commit -m "Deploy"', { stdio: 'inherit' });
-  } catch (e) {
+  } catch (_e) {
     console.log('Nothing to commit or commit failed. Continuing...');
   }
   

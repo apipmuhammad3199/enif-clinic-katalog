@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
 import TreatmentCard from '../components/TreatmentCard';
 import Footer from '../components/Footer';
 import FloatingWhatsApp from '../components/FloatingWhatsApp';
@@ -57,14 +56,14 @@ function Perawatan() {
   const [showPaketModal, setShowPaketModal] = useState(false);
   const [paketClosing, setPaketClosing] = useState(false);
 
-  const closePaketModal = () => {
+  const closePaketModal = useCallback(() => {
     if (paketClosing) return;
     setPaketClosing(true);
     setTimeout(() => {
       setShowPaketModal(false);
       setPaketClosing(false);
     }, 280);
-  };
+  }, [paketClosing]);
 
   // Isi "PAKET TREATMENT": semua paket dengan diskon 45%, dedupe per nama
   const paketTreatments = Object.values(
@@ -134,7 +133,7 @@ function Perawatan() {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [showPaketModal]);
+  }, [showPaketModal, closePaketModal]);
 
 
   return (

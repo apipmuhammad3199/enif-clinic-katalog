@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import AOS from 'aos';
 import 'aos/dist/aos.css';

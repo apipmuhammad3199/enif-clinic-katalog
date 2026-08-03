@@ -199,8 +199,6 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
     ? (treatment.image.startsWith('data:') || treatment.image.startsWith('http') ? treatment.image : `${import.meta.env.BASE_URL}${treatment.image.startsWith('/') ? treatment.image.substring(1) : treatment.image}`) 
     : fallbackImage;
 
-  console.log(`[TreatmentCard] ${treatment.name} | matchedPdf: ${matchedPdf ? 'FOUND' : 'NOT_FOUND'} | pdfUrl: ${pdfUrl}`);
-
   return (
     <div className="treatment-card group" data-aos="fade-up" data-aos-anchor-placement="top-bottom">
       {treatment.isNew ? (

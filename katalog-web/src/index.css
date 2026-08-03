@@ -2295,3 +2295,27 @@ button.floating-wa {
   transform: translateY(-4px);
 }
 
+/* Articles Responsive Layout */
+.articles-layout-row {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.article-card-row {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 768px) {
+  .articles-layout-row,
+  .article-card-row {
+    flex-direction: column;
+  }
+}
+
