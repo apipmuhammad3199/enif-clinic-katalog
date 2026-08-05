@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
 import { storage } from '../firebase';
 import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { validateImageFile } from '../utils/safeguards';
+import { validateImageFile, LOCAL_PDFS } from '../utils/safeguards';
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -99,19 +99,9 @@ function Admin() {
 
   const handleSyncLocalPDFs = async () => {
     try {
-      const localPdfs = [
-        "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT2.pdf", "BOTOX TREATMENT.pdf",
-        "CAUTER.pdf", "FACE CONTOUR TREATMENT.pdf", "FACIAL TREATMENT.pdf", "FILLER.pdf",
-        "GLOWING TREATMENT.pdf", "HAIR REMOVEL TRATMENT.pdf", "INJECTION TREATMENT.pdf",
-        "LASER TREATMENT.pdf", "LUXURY SKINBOOSTER.pdf", "MASSAGE BADAN.pdf",
-        "MELASMA FLEK TREATMENT.pdf", "MESOLIPO.pdf", "PAKET BODY CONTOUR.pdf",
-        "PEELING.pdf", "RADIO FREQUENCY.pdf", "SCAR TREATMENT.pdf", "SUBSISI.pdf",
-        "THREADLIFT..pdf", "TUNGGAL TREATMENT.pdf", "WHITENING TREATMENT.pdf"
-      ];
-
       let synced = 0;
 
-      for (const filename of localPdfs) {
+      for (const filename of LOCAL_PDFS) {
         const cleanName = filename.replace(/\.+pdf$/i, '').trim();
         const existingTreatment = treatments.find(t => t.name?.trim().toLowerCase() === cleanName.toLowerCase());
         const pdfLink = `${import.meta.env.BASE_URL}assets/perawatan/${filename}`;

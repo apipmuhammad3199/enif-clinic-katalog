@@ -25,6 +25,7 @@ const paketThumbSrc = (t) => {
 };
 
 const CATEGORY_ORDER = [
+  (name) => name.includes("new product"),
   (name) => name.includes("lhala peel"),
   (name) => name.includes("facial"),
   (name) => name.includes("whitening"),
@@ -84,7 +85,6 @@ function Perawatan() {
 
   const uniqueTreatments = Object.values(
     (treatments || [])
-      .filter(t => t.pdfLink && t.pdfLink !== '#')
       .reduce((acc, t) => {
         let key = t.name?.trim().toLowerCase();
         if (!key) return acc;
@@ -94,8 +94,8 @@ function Perawatan() {
           t = { ...t, name: 'MELASMA / FLEX TREATMENT' };
         }
 
-        // Prefer item with image if key already exists
-        if (!acc[key] || (t.image && !acc[key].image)) {
+        // Prefer item with image or pdfLink if key already exists
+        if (!acc[key] || ((t.image || t.pdfLink) && !acc[key].image && !acc[key].pdfLink)) {
           acc[key] = t;
         }
         return acc;

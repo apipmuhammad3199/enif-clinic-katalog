@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CMSContext } from '../context/CMSContext';
-import localPdfs from '../data/localPdfs.json';
+import { TREATMENT_ASSETS_MAP, LOCAL_PDFS } from '../utils/safeguards';
 
 const normalizeName = (value = '') => (value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, ' ');
 
 const isSameTreatmentName = (left, right) => {
   const leftName = normalizeName(left);
   const rightName = normalizeName(right);
-  return leftName === rightName || leftName === `${rightName} 2` || `${leftName} 2` === rightName;
+  if (!leftName || !rightName) return false;
+  return leftName === rightName || leftName.startsWith(rightName) || rightName.startsWith(leftName);
 };
 
 const getDiscountBadge = (discount) => {
@@ -45,120 +46,7 @@ const calculateDiscountedPrice = (priceStr, discountPercent) => {
 // treat them as no link at all so the fallback chain below kicks in instead.
 const isUsablePdfLink = (link) => Boolean(link) && link !== '#' && !link.startsWith('blob:');
 
-const TREATMENT_ASSETS_MAP = {
-  'acne treatment': {
-    pdf: 'assets/perawatan/ACNE TREATMENT.pdf',
-    image: 'assets/images_enif/ACNE TREATMENT.png'
-  },
-  'body contour': {
-    pdf: 'assets/perawatan/BODY CONTOUR.pdf',
-    image: 'assets/images_enif/PAKET BODY CONTOUR.png'
-  },
-  'paket body contour': {
-    pdf: 'assets/perawatan/PAKET BODY CONTOUR.pdf',
-    image: 'assets/images_enif/PAKET BODY CONTOUR.png'
-  },
-  'body treatment': {
-    pdf: 'assets/perawatan/BODY TREATMENT2.pdf',
-    image: 'assets/perawatan/image/BODY TREATMENT2.png'
-  },
-  'botox treatment': {
-    pdf: 'assets/perawatan/BOTOX TREATMENT.pdf',
-    image: 'assets/images_enif/BOTOX TREATMENT.png'
-  },
-  'cauter': {
-    pdf: 'assets/perawatan/CAUTER.pdf',
-    image: 'assets/images_enif/CAUTER.png'
-  },
-  'face contour treatment': {
-    pdf: 'assets/perawatan/FACE CONTOUR TREATMENT.pdf',
-    image: 'assets/perawatan/image/FACE CONTOUR TREATMENT.png'
-  },
-  'facial treatment': {
-    pdf: 'assets/perawatan/FACIAL TREATMENT.pdf',
-    image: 'assets/images_enif/FACIAL TREATMENT.png'
-  },
-  'filler': {
-    pdf: 'assets/perawatan/FILLER.pdf',
-    image: 'assets/images_enif/FILLER.png'
-  },
-  'glowing treatment': {
-    pdf: 'assets/perawatan/GLOWING TREATMENT.pdf',
-    image: 'assets/images_enif/GLOWING TREATMENT.png'
-  },
-  'hair removal treatment': {
-    pdf: 'assets/perawatan/HAIR REMOVEL TRATMENT.pdf',
-    image: 'assets/images_enif/HAIR REMOVEL TRATMENT.png'
-  },
-  'hair removel tratment': {
-    pdf: 'assets/perawatan/HAIR REMOVEL TRATMENT.pdf',
-    image: 'assets/images_enif/HAIR REMOVEL TRATMENT.png'
-  },
-  'injection treatment': {
-    pdf: 'assets/perawatan/INJECTION TREATMENT.pdf',
-    image: 'assets/images_enif/INJECTION TREATMENT.png'
-  },
-  'laser treatment': {
-    pdf: 'assets/perawatan/LASER TREATMENT.pdf',
-    image: 'assets/images_enif/LASER TREATMENT.png'
-  },
-  'lhala peel treatment': {
-    pdf: 'assets/perawatan/LHALA PEEL TREATMENT.pdf',
-    image: 'assets/images_enif/LHALA PEEL TREATMENT.png'
-  },
-  'luxury skinbooster': {
-    pdf: 'assets/perawatan/LUXURY SKINBOOSTER.pdf',
-    image: 'assets/images_enif/LUXURY SKINBOOSTER.png'
-  },
-  'massage badan': {
-    pdf: 'assets/perawatan/MASSAGE BADAN.pdf',
-    image: 'assets/images_enif/MASSAGE BADAN.png'
-  },
-  'melasma flex treatment': {
-    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
-    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
-  },
-  'melasma flek treatment': {
-    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
-    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
-  },
-  'melasma / flex treatment': {
-    pdf: 'assets/perawatan/MELASMA FLEK TREATMENT.pdf',
-    image: 'assets/images_enif/MELASMA FLEK TREATMENT.png'
-  },
-  'mesolipo': {
-    pdf: 'assets/perawatan/MESOLIPO.pdf',
-    image: 'assets/images_enif/MESOLIPO.png'
-  },
-  'peeling': {
-    pdf: 'assets/perawatan/PEELING.pdf',
-    image: 'assets/images_enif/PEELING.png'
-  },
-  'radio frequency': {
-    pdf: 'assets/perawatan/RADIO FREQUENCY.pdf',
-    image: 'assets/images_enif/RADIO FREQUENCY.png'
-  },
-  'scar treatment': {
-    pdf: 'assets/perawatan/SCAR TREATMENT.pdf',
-    image: 'assets/images_enif/SCAR TREATMENT.png'
-  },
-  'subsisi': {
-    pdf: 'assets/perawatan/SUBSISI.pdf',
-    image: 'assets/images_enif/SUBSISI.png'
-  },
-  'threadlift': {
-    pdf: 'assets/perawatan/THREADLIFT..pdf',
-    image: 'assets/images_enif/THREADLIFT..png'
-  },
-  'tunggal treatment': {
-    pdf: 'assets/perawatan/TUNGGAL TREATMENT.pdf',
-    image: 'assets/images_enif/TUNGGAL TREATMENT.png'
-  },
-  'whitening treatment': {
-    pdf: 'assets/perawatan/WHITENING TREATMENT.pdf',
-    image: 'assets/images_enif/WHITENING TREATMENT.png'
-  }
-};
+
 
 const TreatmentCard = ({ treatment, isProduct = false }) => {
   const { perawatanPDFs } = useContext(CMSContext);
@@ -170,7 +58,7 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
   const matchedPdf = perawatanPDFs?.find(p => p.name?.trim().toLowerCase() === treatment.name?.trim().toLowerCase());
   
   // Try to find a matching PDF from the local assets/perawatan folder
-  const localMatch = localPdfs.find(filename => {
+  const localMatch = LOCAL_PDFS.find(filename => {
     const cleanFile = filename.replace(/\.+pdf$/i, '').trim();
     const cleanName = treatment.name?.trim() || '';
     return isSameTreatmentName(cleanFile, cleanName);
@@ -185,8 +73,13 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
     ? `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}`
     : null;
 
-  const pdfUrl = promoPdfUrl
-    || (mapped ? `${import.meta.env.BASE_URL}${mapped.pdf}` : null)
+  const mappedPdfUrl = mapped 
+    ? (mapped.pdf.startsWith('http') ? mapped.pdf : `${import.meta.env.BASE_URL}${mapped.pdf}`)
+    : null;
+
+  const pdfUrl = (mappedPdfUrl && mappedPdfUrl.startsWith('http') ? mappedPdfUrl : null)
+    || promoPdfUrl
+    || mappedPdfUrl
     || finalPdfLink 
     || (localMatch ? `${import.meta.env.BASE_URL}assets/perawatan/${localMatch}` : null)
     || (treatment.filename ? `${import.meta.env.BASE_URL}assets/treatments/${treatment.filename}` : null);
@@ -202,7 +95,9 @@ const TreatmentCard = ({ treatment, isProduct = false }) => {
   return (
     <div className="treatment-card group" data-aos="fade-up" data-aos-anchor-placement="top-bottom">
       {treatment.isNew ? (
-        <div className="badge" style={{ backgroundColor: 'var(--primary-color)', padding: '0.4rem 1rem', borderRadius: '0 0 0 8px', fontWeight: 'bold' }}>NEW TREATMENT</div>
+        <div className="badge" style={{ backgroundColor: 'var(--primary-color)', padding: '0.4rem 1rem', borderRadius: '0 0 0 8px', fontWeight: 'bold' }}>
+          {treatment.badgeText || "NEW PRODUCT"}
+        </div>
       ) : (
         getDiscountBadge(activeDiscount)
       )}

@@ -3,7 +3,7 @@ import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs
 import { db } from '../firebase';
 import defaultTreatments from '../data.json';
 import { articles as defaultArticles } from '../data/articles';
-import { sanitizePromos, sanitizeSkincare, sanitizeTreatments } from '../utils/safeguards';
+import { sanitizePromos, sanitizeSkincare, sanitizeTreatments, sanitizeBeforeAfter, isUnsplashUrl, LOCAL_PDFS } from '../utils/safeguards';
 
 export const CMSContext = createContext();
 
@@ -97,17 +97,7 @@ export const CMSProvider = ({ children }) => {
           const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
           const existingPdfNames = pdfsSnap.docs.map(doc => doc.data().name?.trim().toLowerCase());
           
-          const localPdfs = [
-            "ACNE TREATMENT.pdf", "BODY CONTOUR.pdf", "BODY TREATMENT2.pdf", "BOTOX TREATMENT.pdf",
-            "CAUTER.pdf", "FACE CONTOUR TREATMENT.pdf", "FACIAL TREATMENT.pdf", "FILLER.pdf",
-            "GLOWING TREATMENT.pdf", "HAIR REMOVEL TRATMENT.pdf", "INJECTION TREATMENT.pdf",
-            "LASER TREATMENT.pdf", "LUXURY SKINBOOSTER.pdf", "MASSAGE BADAN.pdf",
-            "MELASMA FLEK TREATMENT.pdf", "MESOLIPO.pdf", "PAKET BODY CONTOUR.pdf",
-            "PEELING.pdf", "RADIO FREQUENCY.pdf", "SCAR TREATMENT.pdf", "SUBSISI.pdf",
-            "THREADLIFT..pdf", "TUNGGAL TREATMENT.pdf", "WHITENING TREATMENT.pdf"
-          ];
-          
-          for (const filename of localPdfs) {
+          for (const filename of LOCAL_PDFS) {
             const cleanName = filename.replace(/\.+pdf$/i, '').trim();
             if (!existingPdfNames.includes(cleanName.toLowerCase())) {
               await addDoc(collection(db, 'perawatan_pdfs'), {
@@ -149,18 +139,54 @@ export const CMSProvider = ({ children }) => {
     const unsubTreatments = onSnapshot(collection(db, 'treatments'), (snapshot) => {
       const treatmentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Inject local LHALA PEEL TREATMENT
-      if (!treatmentsData.find(t => t.name === 'LHALA PEEL TREATMENT')) {
+      // Inject/Ensure local LHALA PEEL TREATMENT
+      const lhalaIndex = treatmentsData.findIndex(t => t.name?.trim().toLowerCase() === 'lhala peel treatment');
+      if (lhalaIndex === -1) {
         treatmentsData.push({
           id: 'local_lhala_peel',
           name: 'LHALA PEEL TREATMENT',
-          price: '', // Removed price as requested
+          price: '',
           discount: 0,
-          pdfLink: '/assets/perawatan/LHALA PEEL TREATMENT.pdf',
-          image: '/assets/images_enif/LHALA PEEL TREATMENT.png', // Set image path for the uploaded image
-          isNew: true, // Flag for the New Treatment badge
+          pdfLink: `${import.meta.env.BASE_URL}assets/perawatan/LHALA PEEL TREATMENT.pdf`,
+          image: `${import.meta.env.BASE_URL}assets/images_enif/LHALA PEEL TREATMENT.png`,
+          isNew: true,
+          badgeText: 'NEW TREATMENT',
           createdAt: Date.now()
         });
+      } else {
+        treatmentsData[lhalaIndex] = {
+          ...treatmentsData[lhalaIndex],
+          name: 'LHALA PEEL TREATMENT',
+          pdfLink: `${import.meta.env.BASE_URL}assets/perawatan/LHALA PEEL TREATMENT.pdf`,
+          image: `${import.meta.env.BASE_URL}assets/images_enif/LHALA PEEL TREATMENT.png`,
+          isNew: true,
+          badgeText: 'NEW TREATMENT'
+        };
+      }
+      
+      // Inject local NEW PRODUCT TREATMENT
+      const newProdIndex = treatmentsData.findIndex(t => t.name?.trim().toLowerCase() === 'new product treatment');
+      if (newProdIndex === -1) {
+        treatmentsData.push({
+          id: 'local_new_product_treatment',
+          name: 'NEW PRODUCT TREATMENT',
+          price: '',
+          discount: 0,
+          pdfLink: 'https://drive.google.com/file/d/1EJubqoHIjdnZVENhTBm52ebMSxWYF-Ge/view?usp=drive_link',
+          image: `${import.meta.env.BASE_URL}assets/images_enif/NEW PRODUCT TREATMENT.png`,
+          isNew: true,
+          badgeText: 'NEW PRODUCT',
+          createdAt: Date.now() + 1000
+        });
+      } else {
+        treatmentsData[newProdIndex] = {
+          ...treatmentsData[newProdIndex],
+          name: 'NEW PRODUCT TREATMENT',
+          pdfLink: 'https://drive.google.com/file/d/1EJubqoHIjdnZVENhTBm52ebMSxWYF-Ge/view?usp=drive_link',
+          image: `${import.meta.env.BASE_URL}assets/images_enif/NEW PRODUCT TREATMENT.png`,
+          isNew: true,
+          badgeText: 'NEW PRODUCT'
+        };
       }
       
       // Ensure all 5 promo 45% treatments are active and present
@@ -296,7 +322,7 @@ export const CMSProvider = ({ children }) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       data.sort((a, b) => b.createdAt - a.createdAt);
       
-      setBeforeAfterImages(data);
+      setBeforeAfterImages(sanitizeBeforeAfter(data));
     });
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
@@ -344,20 +370,68 @@ export const CMSProvider = ({ children }) => {
 
   const cleanFirestoreImagesAndDuplicates = async () => {
     try {
-      console.log("Cleaning up Firestore duplicate items...");
+      console.log("Cleaning up Firestore duplicate items and Unsplash links...");
 
+      // 1. Clean Unsplash URLs & duplicates from before_after collection in Firestore
+      const beforeAfterSnap = await getDocs(collection(db, 'before_after'));
+      const seenBeforeAfter = new Set();
+      let baIndex = 0;
+      for (const docSnap of beforeAfterSnap.docs) {
+        const data = docSnap.data();
+        const titleKey = data.title?.trim().toLowerCase();
+        if (titleKey && seenBeforeAfter.has(titleKey)) {
+          await deleteDoc(doc(db, 'before_after', docSnap.id));
+          continue;
+        }
+        if (titleKey) seenBeforeAfter.add(titleKey);
+
+        if (isUnsplashUrl(data.img)) {
+          const imgIndex = (baIndex % 13) + 1;
+          const localImg = `${import.meta.env.BASE_URL}assets/before_after/before${imgIndex}.jpeg`;
+          await setDoc(doc(db, 'before_after', docSnap.id), { img: localImg }, { merge: true });
+        }
+        baIndex++;
+      }
+
+      // 2. Clean Unsplash URLs from promos collection
+      const promosSnap = await getDocs(collection(db, 'promos'));
+      for (const docSnap of promosSnap.docs) {
+        const data = docSnap.data();
+        if (isUnsplashUrl(data.url)) {
+          await deleteDoc(doc(db, 'promos', docSnap.id));
+        }
+      }
+
+      // 3. Clean Unsplash URLs from skincare_products collection
+      const skincareSnap = await getDocs(collection(db, 'skincare_products'));
+      let skIndex = 0;
+      for (const docSnap of skincareSnap.docs) {
+        const data = docSnap.data();
+        if (isUnsplashUrl(data.image)) {
+          const defaultImg = `${import.meta.env.BASE_URL}assets/product_skincare/skincare${(skIndex % 5) + 1}.jpeg`;
+          await setDoc(doc(db, 'skincare_products', docSnap.id), { image: defaultImg }, { merge: true });
+        }
+        skIndex++;
+      }
+
+      // 4. Clean Unsplash URLs & duplicates from treatments collection
       const treatmentsSnap = await getDocs(collection(db, 'treatments'));
       const seenTreatments = new Set();
       for (const docSnap of treatmentsSnap.docs) {
-        const nameKey = docSnap.data().name?.trim().toLowerCase();
+        const data = docSnap.data();
+        const nameKey = data.name?.trim().toLowerCase();
         if (!nameKey) continue;
         if (seenTreatments.has(nameKey)) {
           await deleteDoc(doc(db, 'treatments', docSnap.id));
         } else {
           seenTreatments.add(nameKey);
+          if (isUnsplashUrl(data.image)) {
+            await setDoc(doc(db, 'treatments', docSnap.id), { image: '' }, { merge: true });
+          }
         }
       }
 
+      // 5. Clean duplicates from perawatan_pdfs collection
       const pdfsSnap = await getDocs(collection(db, 'perawatan_pdfs'));
       const seenPdfs = new Set();
       for (const docSnap of pdfsSnap.docs) {
